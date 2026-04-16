@@ -1,6 +1,5 @@
 from django.shortcuts import render
 
-from multiprocessing import context
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
@@ -8,11 +7,19 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth import get_user_model
+from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import Doctors, Patients, Address, Specialty
 
 
 Users = get_user_model()
 
+def csrf_failure(request, reason=""):
+  # Tokens can become stale after login/logout in another tab.
+  messages.error(request, 'Your session token expired. Please reload the page and submit again.')
+  return redirect(request.path)
+
+
+@ensure_csrf_cookie
 def register(request):
   if request.method == 'POST':
     user_status = request.POST.get('user_config')
@@ -95,6 +102,7 @@ def register(request):
   return render(request, 'users/register.html')
 
 
+@ensure_csrf_cookie
 def login_view(request):
   if request.method == 'POST':
     username = request.POST.get('username')
@@ -131,6 +139,7 @@ def login_view(request):
   return render(request, 'users/login.html')
 
 
+@ensure_csrf_cookie
 def forgot_view(request):
     if request.method == 'POST':
         step = request.POST.get('step', 'lookup')
