@@ -93,39 +93,6 @@
     </div>
   </section>
 
-  <!--graph scripts-->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    const labels = [
-      'Med-1',
-      'Med-2',
-      'Med-3',
-      'Med-4',
-    ];
-  
-    const data = {
-      labels: labels,
-      datasets: [{
-        label: 'Dosage',
-        backgroundColor: 'rgb(15, 110, 172)',
-        borderColor: 'rgb(25, 99, 232)',
-        data: [7, 12, 7, 9],
-      }]
-    };
-  
-    const config = {
-      type: 'bar',
-      data: data,
-      options: {}
-    };
-  </script>
-  <script>
-    const myChart = new Chart(
-      document.getElementById('myChart'),
-      config
-    );
-  </script>
-
 </main>
 
 {% endblock %}
