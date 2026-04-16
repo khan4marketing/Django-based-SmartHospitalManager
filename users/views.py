@@ -1,0 +1,200 @@
+from django.shortcuts import render
+
+from multiprocessing import context
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth import get_user_model
+from .models import Doctors, Patients, Address, Specialty
+
+
+Users = get_user_model()
+
+def register(request):
+  if request.method == 'POST':
+    user_status = request.POST.get('user_config')
+    first_name = request.POST.get('user_firstname')
+    last_name = request.POST.get('user_lastname')
+    profile_pic = ""
+
+    if "profile_pic" in request.FILES:
+      profile_pic = request.FILES['profile_pic']
+
+    username = request.POST.get('user_id')
+    email = request.POST.get('email')
+    gender = request.POST.get('user_gender')
+    birthday = request.POST.get("birthday")
+    password = request.POST.get('password')
+    confirm_password = request.POST.get('conf_password')
+    recovery_question = request.POST.get('recovery_question')
+    recovery_answer = (request.POST.get('recovery_answer') or '').strip().lower()
+    address_line = request.POST.get('address_line')
+    region = request.POST.get('region')
+    city = request.POST.get('city')
+    pincode = request.POST.get('pincode')
+
+    if len(password) < 6:
+      messages.error(request, 'Password must be at least 6 characters long.')
+      return render(request, 'users/register.html', context={'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode})
+
+    if password != confirm_password:
+      messages.error(request, 'Passwords do not match.')
+      return render(request, 'users/register.html', context={'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode})
+
+    if not recovery_question or not recovery_answer:
+      messages.error(request, 'Security question and answer are required.')
+      return render(request, 'users/register.html', context={'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode})
+
+    if Users.objects.filter(username=username).exists():
+      messages.error(request, 'Username already exists. Try again with a different username.')
+      return render(request, 'users/register.html', context={'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode})
+
+    address = Address.objects.create(address_line=address_line, region=region,city=city, code_postal=pincode)
+
+    user = Users.objects.create_user(
+      first_name=first_name,
+      last_name=last_name,
+      profile_avatar=profile_pic,
+      username=username,
+      email=email,
+      gender=gender,
+      birthday=birthday,
+      password=password,
+      recovery_question=recovery_question,
+      recovery_answer=make_password(recovery_answer),
+      id_address=address,
+      is_doctor=(user_status == 'Doctor')
+    )
+      
+    user.save()
+
+    if user_status == 'Doctor':
+      specialty = (request.POST.get('specialty') or request.POST.get('Speciality') or '').strip()
+      if not specialty:
+        messages.error(request, 'Specialty is required for doctors.')
+        return render(request, 'users/register.html', context={'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode})
+      bio = request.POST.get('bio')
+      specialty_name, _ = Specialty.objects.get_or_create(
+        name=specialty,
+        defaults={'description': ''}
+      )
+      doctor = Doctors.objects.create(user=user, specialty=specialty_name, bio=bio)
+      doctor.save()
+        
+    elif user_status == 'Patient':
+        insurance = request.POST.get('insurance')
+        patient = Patients.objects.create(user=user, insurance=insurance)
+        patient.save()
+
+    messages.success(request, 'Your account has been successfully registered. Please login.', extra_tags='success')
+
+
+  return render(request, 'users/register.html')
+
+
+def login_view(request):
+  if request.method == 'POST':
+    username = request.POST.get('username')
+    password = request.POST.get('password')
+    user_config = request.POST.get('user_config')
+
+    user = authenticate(request, username=username, password=password)
+
+    if user is not None:
+      if user_config == 'Doctor' and not user.is_doctor:
+        messages.error(request, 'This account is not registered as a doctor.')
+        return render(request, 'users/login.html', {'selected_user_config': user_config})
+
+      if user_config == 'Patient' and user.is_doctor:
+        messages.error(request, 'This account is not registered as a patient.')
+        return render(request, 'users/login.html', {'selected_user_config': user_config})
+
+      login(request, user)
+
+      if user.is_doctor:
+        return redirect('doctor_dashboard')
+
+      if Patients.objects.filter(user=user).exists():
+        return redirect('patient_dashboard')
+
+      # Fallback: if a non-doctor user exists without a Patient row,
+      # still move forward instead of staying on the login page.
+      return redirect('patient_dashboard')
+    else:
+      messages.error(request, 'Incorrect username or password')
+      
+    return render(request, 'users/login.html', {'selected_user_config': user_config})
+  
+  return render(request, 'users/login.html')
+
+
+def forgot_view(request):
+    if request.method == 'POST':
+        step = request.POST.get('step', 'lookup')
+
+        if step == 'lookup':
+            username = (request.POST.get('username') or '').strip()
+            user = Users.objects.filter(username=username).first()
+
+            if not user:
+                messages.error(request, 'Username not found.')
+                return render(request, 'users/forgot.html')
+
+            if not user.recovery_question or not user.recovery_answer:
+                messages.error(request, 'Security key is not configured for this account.')
+                return render(request, 'users/forgot.html')
+
+            return render(request, 'users/forgot.html', context={
+                'step': 'verify',
+                'username': user.username,
+                'recovery_question': user.get_recovery_question_display(),
+            })
+
+        if step == 'verify':
+            username = (request.POST.get('username') or '').strip()
+            answer = (request.POST.get('recovery_answer') or '').strip().lower()
+            password = request.POST.get('password')
+            confirm_password = request.POST.get('conf_password')
+            user = Users.objects.filter(username=username).first()
+
+            if not user:
+                messages.error(request, 'Username not found.')
+                return render(request, 'users/forgot.html')
+
+            if not check_password(answer, user.recovery_answer):
+                messages.error(request, 'Security answer is incorrect.')
+                return render(request, 'users/forgot.html', context={
+                    'step': 'verify',
+                    'username': user.username,
+                    'recovery_question': user.get_recovery_question_display(),
+                })
+
+            if len(password) < 6:
+                messages.error(request, 'Password must be at least 6 characters long.')
+                return render(request, 'users/forgot.html', context={
+                    'step': 'verify',
+                    'username': user.username,
+                    'recovery_question': user.get_recovery_question_display(),
+                })
+
+            if password != confirm_password:
+                messages.error(request, 'Passwords do not match.')
+                return render(request, 'users/forgot.html', context={
+                    'step': 'verify',
+                    'username': user.username,
+                    'recovery_question': user.get_recovery_question_display(),
+                })
+
+            user.set_password(password)
+            user.save()
+            messages.success(request, 'Password reset successful. Please login.', extra_tags='success')
+            return redirect('login')
+
+    return render(request, 'users/forgot.html')
+@login_required(login_url='/login')
+def logout_view(request):
+    logout(request)
+    return redirect('login')
