@@ -1,69 +1,140 @@
-# Hospital Management
+# Smart Hospital Manager
 
-A Django-based hospital management project with user registration, login, role-based dashboards, and profile management for doctors and patients.
+A Django-based hospital management platform focused on clean role-based workflows for doctors and patients.
 
-## Features
+## Project Highlights
 
-- User registration and login
-- Doctor and patient roles
-- Profile editing
-- Separate dashboards for doctors and patients
-- Blog-related models and app structure are still present in the codebase for future expansion
+- Role-based authentication for Doctor and Patient users
+- Dedicated dashboards for each role
+- Editable profile page with image upload
+- Recovery question based password reset flow
+- Random demo data generator for fast local testing
 
-## Requirements
+## Tech Stack
 
-- Python 3.11+ recommended
-- Django 6.x
-- Pillow
-- MySQL Server 8.x (or compatible)
-- PyMySQL
-- cryptography
+| Layer | Technology |
+| --- | --- |
+| Backend | Django 6 |
+| Database | MySQL 8 |
+| Image Handling | Pillow |
+| MySQL Driver | PyMySQL |
 
-## Setup
+## Quick Start
 
-1. Create and activate a virtual environment.
-2. Install the dependencies from `requirements.txt`.
-3. Make sure MySQL server is running.
-4. Create the database in MySQL:
+For most users, this is enough:
 
-	```sql
-	CREATE DATABASE hospital_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-	```
+```bash
+git clone https://github.com/your-username/your-repo.git
+cd SmartHospitalManager
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py seed_users --doctors 10 --patients 10 --password Pass@123
+python manage.py runserver
+```
 
-5. Update database credentials in `hospital/settings.py` with your own local MySQL account.
-6. Run migrations with `python manage.py migrate`.
-7. Start the development server with `python manage.py runserver`.
+Open: http://127.0.0.1:8000/
 
-## MySQL Database Configuration
+## New Device Setup (Windows)
 
-Current MySQL settings in `hospital/settings.py`:
+### 1) Install MySQL Server
 
-- ENGINE: `django.db.backends.mysql`
-- NAME: `hospital_db`
-- USER: `root`
-- PASSWORD: `1234`
-- HOST: `127.0.0.1`
-- PORT: `3306`
+Choose one:
 
-If your local MySQL credentials are different, update these values in `hospital/settings.py` before running migrations.
+```bash
+winget install Oracle.MySQL
+```
 
-## Team Member Setup (Recommended)
+```bash
+choco install mysql
+```
 
-For other team members, do not share one root password across all machines. Each member should use their own local MySQL user and password.
+Or install from the official MySQL Installer Community package.
 
-Suggested personal setup values:
+Verify installation:
 
-- NAME: `hospital_db`
-- USER: your own MySQL username (example: `hospital_user`)
-- PASSWORD: your own MySQL password
-- HOST: `127.0.0.1`
-- PORT: `3306`
+```bash
+mysql --version
+```
 
-Then use those values in the `DATABASES` section of `hospital/settings.py`.
+### 2) Start MySQL Service
 
-## Optional MySQL User Setup
+```bash
+net start MySQL80
+```
 
-You can create a dedicated MySQL user instead of using root:
+### 3) Create Project Database
+
+Login with default project credentials:
+
+```bash
+mysql -u root -p1234 -h 127.0.0.1 -P 3306
+```
+
+Then run:
+
+```sql
+CREATE DATABASE hospital_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+### 4) Install Python Dependencies
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+For Git Bash activation:
+
+```bash
+source .venv/Scripts/activate
+```
+
+### 5) Apply Migrations, Seed, and Run
+
+```bash
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py seed_users --doctors 10 --patients 10 --password Pass@123
+python manage.py runserver
+```
+
+## MySQL Credentials (Current Project)
+
+| Key | Value |
+| --- | --- |
+| Username | root |
+| Password | 1234 |
+| Host | 127.0.0.1 |
+| Port | 3306 |
+| Database name | hospital_db |
+
+If your machine uses different credentials, update the DATABASES values in hospital/settings.py.
+
+## Seed Demo Data
+
+Generate random users for testing:
+
+```bash
+python manage.py seed_users
+```
+
+Custom counts:
+
+```bash
+python manage.py seed_users --doctors 10 --patients 10 --password Pass@123
+```
+
+## Migration Guide
+
+- Use `python manage.py makemigrations` only when model files change.
+- For command-only changes (example: users/management/commands/seed_users.py), `makemigrations` is not required.
+
+## Optional Team-Friendly MySQL User
+
+Instead of sharing root, create a dedicated user per machine:
 
 ```sql
 CREATE USER 'hospital_user'@'localhost' IDENTIFIED BY 'strong_password_here';
@@ -71,9 +142,11 @@ GRANT ALL PRIVILEGES ON hospital_db.* TO 'hospital_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
+Then update USER and PASSWORD in hospital/settings.py.
+
 ## Project Notes
 
-- MySQL is used as the local development database.
-- `media/` stores uploaded profile images and other user files.
-- `static/` contains the project assets.
+- MySQL is used for local development.
+- media/ stores uploaded profile images.
+- static/ contains static assets.
 
