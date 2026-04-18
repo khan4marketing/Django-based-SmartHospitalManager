@@ -36,7 +36,12 @@
 
       <div id="specialty_block" class="mb-3" style="display: none;">
         <label class="mb-2 text-muted" for="specialty">Specialty</label>
-        <input type="text" name="specialty" class="form-control" id="specialty" placeholder="Type your specialty" {% if user_config == 'Doctor' %}required{% endif %}>
+        <select class="form-select" name="specialty" id="specialty" {% if user_config == 'Doctor' %}required{% endif %}>
+          <option value="">Select specialty</option>
+          {% for item in specialties %}
+            <option value="{{ item.id }}" {% if specialty == item.id|stringformat:'s' %}selected{% endif %}>{{ item.name }}</option>
+          {% endfor %}
+        </select>
         <div class="invalid-feedback">Specialty is required for doctors</div>
       </div>
       
@@ -46,10 +51,27 @@
           <div class="invalid-feedback">Bio is required for doctors</div>
       </div>
       
-      <div id="insurance_block" class="mb-3" style="display: none;">
-          <label class="mb-2 text-muted" for="insurance">Insurance</label>
-          <input id="insurance" type="text" class="form-control" name="insurance" {% if user_config == 'Patient' %}required{% endif %} />
-          <div class="invalid-feedback">Insurance is required for patients</div>
+      <div id="disease_block" class="mb-3" style="display: none;">
+        <label class="mb-2 text-muted" for="previous_disease">Previous Disease</label>
+        <select class="form-select" name="previous_disease" id="previous_disease" {% if user_config == 'Patient' %}required{% endif %}>
+          <option value="">Select previous disease</option>
+          <option value="none" {% if previous_disease == 'none' %}selected{% endif %}>None</option>
+          <option value="diabetes" {% if previous_disease == 'diabetes' %}selected{% endif %}>Diabetes</option>
+          <option value="hypertension" {% if previous_disease == 'hypertension' %}selected{% endif %}>Hypertension</option>
+          <option value="asthma" {% if previous_disease == 'asthma' %}selected{% endif %}>Asthma</option>
+          <option value="heart_disease" {% if previous_disease == 'heart_disease' %}selected{% endif %}>Heart Disease</option>
+          <option value="arthritis" {% if previous_disease == 'arthritis' %}selected{% endif %}>Arthritis</option>
+          <option value="chronic_kidney_disease" {% if previous_disease == 'chronic_kidney_disease' %}selected{% endif %}>Chronic Kidney Disease</option>
+          <option value="copd" {% if previous_disease == 'copd' %}selected{% endif %}>COPD</option>
+          <option value="thyroid_disorder" {% if previous_disease == 'thyroid_disorder' %}selected{% endif %}>Thyroid Disorder</option>
+          <option value="epilepsy" {% if previous_disease == 'epilepsy' %}selected{% endif %}>Epilepsy</option>
+          <option value="allergy" {% if previous_disease == 'allergy' %}selected{% endif %}>Allergy</option>
+          <option value="tuberculosis" {% if previous_disease == 'tuberculosis' %}selected{% endif %}>Tuberculosis</option>
+          <option value="migraine" {% if previous_disease == 'migraine' %}selected{% endif %}>Migraine</option>
+          <option value="cancer" {% if previous_disease == 'cancer' %}selected{% endif %}>Cancer</option>
+          <option value="other" {% if previous_disease == 'other' %}selected{% endif %}>Other</option>
+        </select>
+        <div class="invalid-feedback">Previous disease is required for patients</div>
       </div>
 
       <div class="mb-3">
@@ -106,9 +128,9 @@
         <label class="mb-2 text-muted" for="recovery_question">Special Key Question</label>
         <select class="form-select" name="recovery_question" id="recovery_question" required>
           <option value="">Select a question</option>
-          <option value="pet_name">What is your pet name?</option>
-          <option value="first_school">What is your first school name?</option>
-          <option value="hobby">What is your favorite hobby?</option>
+          <option value="pet_name" {% if recovery_question == 'pet_name' %}selected{% endif %}>What is your pet name?</option>
+          <option value="first_school" {% if recovery_question == 'first_school' %}selected{% endif %}>What is your first school name?</option>
+          <option value="hobby" {% if recovery_question == 'hobby' %}selected{% endif %}>What is your favorite hobby?</option>
         </select>
         <div class="invalid-feedback">Security question is required</div>
       </div>
@@ -164,27 +186,27 @@
       var userConfig = document.getElementById('user_status').value;
       var specialtyBlock = document.getElementById('specialty_block');
       var bioBlock = document.getElementById('bio_block');
-      var insuranceBlock = document.getElementById('insurance_block');
+      var diseaseBlock = document.getElementById('disease_block');
       var specialtyField = document.getElementById('specialty');
       var bioField = document.getElementById('bio');
-      var insuranceField = document.getElementById('insurance');
+      var diseaseField = document.getElementById('previous_disease');
 
       if (userConfig === 'Doctor') {
         specialtyBlock.style.display = 'block';
         bioBlock.style.display = 'block';
-        insuranceBlock.style.display = 'none';
+        diseaseBlock.style.display = 'none';
 
         specialtyField.setAttribute('required', 'required');
         bioField.setAttribute('required', 'required');
-        insuranceField.removeAttribute('required');
+        diseaseField.removeAttribute('required');
       } else if (userConfig === 'Patient') {
         specialtyBlock.style.display = 'none';
         bioBlock.style.display = 'none';
-        insuranceBlock.style.display = 'block';
+        diseaseBlock.style.display = 'block';
 
         specialtyField.removeAttribute('required');
         bioField.removeAttribute('required');
-        insuranceField.setAttribute('required', 'required');
+        diseaseField.setAttribute('required', 'required');
       }
     }
   });
