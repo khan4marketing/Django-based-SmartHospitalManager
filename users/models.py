@@ -45,15 +45,32 @@ class Users(AbstractUser):
       return self.username
 
 class Specialty(models.Model):
-    name = models.CharField(max_length=25 , unique=True)
-    description = models.TextField()
-    
-    class Meta:
-      verbose_name = "Specialty"
-      verbose_name_plural = "Specialty"
-    
-    def __str__(self):
-      return self.name
+  name = models.CharField(max_length=25, unique=True)
+  description = models.TextField()
+  disease_choices = (
+    ("diabetes", "Diabetes"),
+    ("hypertension", "Hypertension"),
+    ("asthma", "Asthma"),
+    ("heart_disease", "Heart Disease"),
+    ("arthritis", "Arthritis"),
+    ("chronic_kidney_disease", "Chronic Kidney Disease"),
+    ("copd", "COPD"),
+    ("thyroid_disorder", "Thyroid Disorder"),
+    ("epilepsy", "Epilepsy"),
+    ("allergy", "Allergy"),
+    ("tuberculosis", "Tuberculosis"),
+    ("migraine", "Migraine"),
+    ("cancer", "Cancer"),
+    ("other", "Other"),
+  )
+  disease_key = models.CharField(max_length=30, choices=disease_choices, default="other")
+  
+  class Meta:
+    verbose_name = "Specialty"
+    verbose_name_plural = "Specialty"
+  
+  def __str__(self):
+    return self.name
     
 class Doctors(models.Model):
   user = models.OneToOneField(Users, on_delete=models.CASCADE, primary_key=True)
@@ -70,7 +87,24 @@ class Doctors(models.Model):
       
 class Patients(models.Model):
   user = models.OneToOneField(Users, on_delete=models.CASCADE, primary_key=True)
-  insurance = models.CharField(max_length=50)
+  previous_disease_choices = (
+    ("none", "None"),
+    ("diabetes", "Diabetes"),
+    ("hypertension", "Hypertension"),
+    ("asthma", "Asthma"),
+    ("heart_disease", "Heart Disease"),
+    ("arthritis", "Arthritis"),
+    ("chronic_kidney_disease", "Chronic Kidney Disease"),
+    ("copd", "COPD"),
+    ("thyroid_disorder", "Thyroid Disorder"),
+    ("epilepsy", "Epilepsy"),
+    ("allergy", "Allergy"),
+    ("tuberculosis", "Tuberculosis"),
+    ("migraine", "Migraine"),
+    ("cancer", "Cancer"),
+    ("other", "Other"),
+  )
+  previous_disease = models.CharField(max_length=30, choices=previous_disease_choices, default="none")
   
   class Meta:
     verbose_name = "Patient"

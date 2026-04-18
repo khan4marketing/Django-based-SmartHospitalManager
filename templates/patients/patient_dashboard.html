@@ -50,7 +50,32 @@
     
       <!-- Modal -->
       <div class="modal fade" id="Remainder" tabindex="-1" aria-labelledby="Remainder" aria-hidden="true">
-        <!-- Modal content -->
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="RemainderLabel">Add Reminder</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" class="form-control" id="title" placeholder="Enter reminder title">
+              </div>
+              <div class="mb-3">
+                <label for="date" class="form-label">Date</label>
+                <input type="date" class="form-control" id="date">
+              </div>
+              <div class="form-floating">
+                <textarea class="form-control" placeholder="Leave a comment here" id="text" style="height: 100px"></textarea>
+                <label for="text">Comments</label>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary">Add</button>
+            </div>
+          </div>
+        </div>
       </div>
       <!-- /Modal -->
 
@@ -67,8 +92,8 @@
       <div class="summary-single">
         <span class="ti-id-badge"></span>
         <div>
-          <h5>Maladie</h5>
-          <small>Fes</small>
+          <h5>Previous Disease</h5>
+          <small>{{ previous_disease_display|default:'None' }}</small>
         </div>
       </div>
       <div class="summary-single">

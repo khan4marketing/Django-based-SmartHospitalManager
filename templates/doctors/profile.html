@@ -103,14 +103,35 @@
 
                 {% if not request.user.is_doctor %}
                   <div class="mb-3">
-                    <label class="mb-2 fw-bold" for="insurance">Insurance </label>
-                    <input id="insurance" type="text" class="form-control" name="insurance" value="{{ basicdata.patients.insurance }}" required />
-                    <div class="invalid-feedback">Insurance is required for patients</div>
+                    <label class="mb-2 fw-bold" for="previous_disease">Previous Disease</label>
+                    <select class="form-select" name="previous_disease" id="previous_disease" required>
+                      <option value="none" {% if basicdata.patients.previous_disease == 'none' %}selected{% endif %}>None</option>
+                      <option value="diabetes" {% if basicdata.patients.previous_disease == 'diabetes' %}selected{% endif %}>Diabetes</option>
+                      <option value="hypertension" {% if basicdata.patients.previous_disease == 'hypertension' %}selected{% endif %}>Hypertension</option>
+                      <option value="asthma" {% if basicdata.patients.previous_disease == 'asthma' %}selected{% endif %}>Asthma</option>
+                      <option value="heart_disease" {% if basicdata.patients.previous_disease == 'heart_disease' %}selected{% endif %}>Heart Disease</option>
+                      <option value="arthritis" {% if basicdata.patients.previous_disease == 'arthritis' %}selected{% endif %}>Arthritis</option>
+                      <option value="chronic_kidney_disease" {% if basicdata.patients.previous_disease == 'chronic_kidney_disease' %}selected{% endif %}>Chronic Kidney Disease</option>
+                      <option value="copd" {% if basicdata.patients.previous_disease == 'copd' %}selected{% endif %}>COPD</option>
+                      <option value="thyroid_disorder" {% if basicdata.patients.previous_disease == 'thyroid_disorder' %}selected{% endif %}>Thyroid Disorder</option>
+                      <option value="epilepsy" {% if basicdata.patients.previous_disease == 'epilepsy' %}selected{% endif %}>Epilepsy</option>
+                      <option value="allergy" {% if basicdata.patients.previous_disease == 'allergy' %}selected{% endif %}>Allergy</option>
+                      <option value="tuberculosis" {% if basicdata.patients.previous_disease == 'tuberculosis' %}selected{% endif %}>Tuberculosis</option>
+                      <option value="migraine" {% if basicdata.patients.previous_disease == 'migraine' %}selected{% endif %}>Migraine</option>
+                      <option value="cancer" {% if basicdata.patients.previous_disease == 'cancer' %}selected{% endif %}>Cancer</option>
+                      <option value="other" {% if basicdata.patients.previous_disease == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                    <div class="invalid-feedback">Previous disease is required for patients</div>
                   </div>
                 {% else %}
                   <div class="mb-3">
                     <label class="mb-2 fw-bold" for="specialty">Specialty</label>
-                    <input type="text" name="specialty" class="form-control" id="specialty" value="{{ basicdata.doctors.specialty.name }}" placeholder="Type your specialty" required />
+                    <select class="form-select" name="specialty" id="specialty" required>
+                      <option value="">Select specialty</option>
+                      {% for item in specialties %}
+                        <option value="{{ item.id }}" {% if basicdata.doctors.specialty.id == item.id %}selected{% endif %}>{{ item.name }}</option>
+                      {% endfor %}
+                    </select>
                     <div class="invalid-feedback">Specialty is required for doctors</div>
                   </div>
 
