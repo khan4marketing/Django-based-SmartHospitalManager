@@ -21,6 +21,8 @@ def csrf_failure(request, reason=""):
 
 @ensure_csrf_cookie
 def register(request):
+  specialties = Specialty.objects.all().order_by('name')
+
   if request.method == 'POST':
     user_status = request.POST.get('user_config')
     first_name = request.POST.get('user_firstname')
@@ -42,22 +44,42 @@ def register(request):
     region = request.POST.get('region')
     city = request.POST.get('city')
     pincode = request.POST.get('pincode')
+    previous_disease = request.POST.get('previous_disease')
+
+    form_context = {
+      'user_config': user_status,
+      'user_firstname': first_name,
+      'user_lastname': last_name,
+      'user_id': username,
+      'email': email,
+      'user_gender': gender,
+      'birthday': birthday,
+      'address_line': address_line,
+      'region': region,
+      'city': city,
+      'pincode': pincode,
+      'previous_disease': previous_disease,
+      'specialty': request.POST.get('specialty'),
+      'bio': request.POST.get('bio'),
+      'recovery_question': recovery_question,
+      'specialties': specialties,
+    }
 
     if len(password) < 6:
       messages.error(request, 'Password must be at least 6 characters long.')
-      return render(request, 'users/register.html', context={'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode})
+      return render(request, 'users/register.html', context=form_context)
 
     if password != confirm_password:
       messages.error(request, 'Passwords do not match.')
-      return render(request, 'users/register.html', context={'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode})
+      return render(request, 'users/register.html', context=form_context)
 
     if not recovery_question or not recovery_answer:
       messages.error(request, 'Security question and answer are required.')
-      return render(request, 'users/register.html', context={'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode})
+      return render(request, 'users/register.html', context=form_context)
 
     if Users.objects.filter(username=username).exists():
       messages.error(request, 'Username already exists. Try again with a different username.')
-      return render(request, 'users/register.html', context={'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode})
+      return render(request, 'users/register.html', context=form_context)
 
     address = Address.objects.create(address_line=address_line, region=region,city=city, code_postal=pincode)
 
@@ -79,27 +101,31 @@ def register(request):
     user.save()
 
     if user_status == 'Doctor':
-      specialty = (request.POST.get('specialty') or request.POST.get('Speciality') or '').strip()
-      if not specialty:
+      specialty_id = (request.POST.get('specialty') or '').strip()
+      if not specialty_id:
         messages.error(request, 'Specialty is required for doctors.')
-        return render(request, 'users/register.html', context={'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode})
+        return render(request, 'users/register.html', context=form_context)
+
+      specialty_obj = Specialty.objects.filter(id=specialty_id).first()
+      if not specialty_obj:
+        messages.error(request, 'Please select a valid specialty for doctors.')
+        return render(request, 'users/register.html', context=form_context)
+
       bio = request.POST.get('bio')
-      specialty_name, _ = Specialty.objects.get_or_create(
-        name=specialty,
-        defaults={'description': ''}
-      )
-      doctor = Doctors.objects.create(user=user, specialty=specialty_name, bio=bio)
+      doctor = Doctors.objects.create(user=user, specialty=specialty_obj, bio=bio)
       doctor.save()
         
     elif user_status == 'Patient':
-        insurance = request.POST.get('insurance')
-        patient = Patients.objects.create(user=user, insurance=insurance)
+        if not previous_disease:
+          messages.error(request, 'Previous disease is required for patients.')
+          return render(request, 'users/register.html', context=form_context)
+        patient = Patients.objects.create(user=user, previous_disease=previous_disease)
         patient.save()
 
     messages.success(request, 'Your account has been successfully registered. Please login.', extra_tags='success')
 
 
-  return render(request, 'users/register.html')
+  return render(request, 'users/register.html', {'specialties': specialties})
 
 
 @ensure_csrf_cookie

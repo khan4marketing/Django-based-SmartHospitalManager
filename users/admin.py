@@ -103,13 +103,13 @@ class DoctorsAdmin(admin.ModelAdmin):
 
 @admin.register(Patients)
 class PatientsAdmin(admin.ModelAdmin):
-	list_display = ('full_name', 'username', 'email', 'insurance', 'security_key')
+	list_display = ('full_name', 'username', 'email', 'previous_disease', 'security_key')
 	search_fields = (
 		'user__username',
 		'user__first_name',
 		'user__last_name',
 		'user__email',
-		'insurance',
+		'previous_disease',
 		'user__recovery_question',
 	)
 	list_select_related = ('user',)

@@ -3,6 +3,10 @@
   --secondary-color: #86ef23;
 }
 
+body {
+  background-color: #feffee;
+}
+
 
 .primary-color{
   color: var(--primary-color);
