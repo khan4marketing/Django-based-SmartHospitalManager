@@ -1,11 +1,14 @@
 {% extends 'users/base.html' %}
 
 {% block title %}Register Page{% endblock title %}
+{% block page_container_class %}container-fluid px-2 px-sm-3 px-lg-4{% endblock page_container_class %}
+{% block page_row_class %}row justify-content-center{% endblock page_row_class %}
+{% block page_col_class %}col-12{% endblock page_col_class %}
 
 {% block content %}
-<div class="card shadow-lg mx-auto mt-5" style="max-width: 34rem;">
-  <div class="card-body p-4">
-    <h1 class="fs-4 card-title fw-bold mb-3 text-center">Register</h1>
+<div class="card shadow-sm border-0 mx-auto" style="max-width: 100%; border-radius: 16px;">
+  <div class="card-body p-3 p-md-4 p-lg-5">
+    <h1 class="fs-4 card-title fw-bold mb-4 text-center">Register</h1>
 
     <form method="POST" class="needs-validation" novalidate="" autocomplete="off" enctype="multipart/form-data">
       {% csrf_token %}
@@ -26,136 +29,150 @@
         {% endfor %}
       {% endif %}
 
-      <div class="mb-3">
-        <label class="mb-2 text-muted" for="user_status">Choose Your Status :</label>
-        <select class="form-select" name="user_config" id="user_status">
-          <option value="Doctor" {% if user_config == 'Doctor' %}selected{% endif %}>Doctor</option>
-          <option value="Patient" {% if user_config == 'Patient' %}selected{% endif %}>Patient</option>
-        </select>
+      <div class="row g-3">
+        <div class="col-12 col-xl-4">
+          <div class="h-100 border rounded-3 p-3 p-md-4 bg-white">
+            <div class="mb-3">
+              <label class="mb-1 text-muted" for="user_status">Choose Your Status :</label>
+              <select class="form-select" name="user_config" id="user_status">
+                <option value="Doctor" {% if user_config == 'Doctor' %}selected{% endif %}>Doctor</option>
+                <option value="Patient" {% if user_config == 'Patient' %}selected{% endif %}>Patient</option>
+              </select>
+            </div>
+
+            <div id="specialty_block" class="mb-3" style="display: none;">
+              <label class="mb-1 text-muted" for="specialty">Specialty</label>
+              <select class="form-select" name="specialty" id="specialty" {% if user_config == 'Doctor' %}required{% endif %}>
+                <option value="">Select specialty</option>
+                {% for item in specialties %}
+                  <option value="{{ item.id }}" {% if specialty == item.id|stringformat:'s' %}selected{% endif %}>{{ item.name }}</option>
+                {% endfor %}
+              </select>
+              <div class="invalid-feedback">Specialty is required for doctors</div>
+            </div>
+
+            <div id="bio_block" class="mb-3" style="display: none;">
+              <label class="mb-1 text-muted" for="bio">Bio</label>
+              <textarea id="bio" class="form-control" rows="2" name="bio" {% if user_config == 'Doctor' %}required{% endif %}></textarea>
+              <div class="invalid-feedback">Bio is required for doctors</div>
+            </div>
+
+            <div id="disease_block" class="mb-3" style="display: none;">
+              <label class="mb-1 text-muted" for="previous_disease">Previous Disease</label>
+              <select class="form-select" name="previous_disease" id="previous_disease" {% if user_config == 'Patient' %}required{% endif %}>
+                <option value="">Select previous disease</option>
+                <option value="none" {% if previous_disease == 'none' %}selected{% endif %}>None</option>
+                <option value="diabetes" {% if previous_disease == 'diabetes' %}selected{% endif %}>Diabetes</option>
+                <option value="hypertension" {% if previous_disease == 'hypertension' %}selected{% endif %}>Hypertension</option>
+                <option value="asthma" {% if previous_disease == 'asthma' %}selected{% endif %}>Asthma</option>
+                <option value="heart_disease" {% if previous_disease == 'heart_disease' %}selected{% endif %}>Heart Disease</option>
+                <option value="arthritis" {% if previous_disease == 'arthritis' %}selected{% endif %}>Arthritis</option>
+                <option value="chronic_kidney_disease" {% if previous_disease == 'chronic_kidney_disease' %}selected{% endif %}>Chronic Kidney Disease</option>
+                <option value="copd" {% if previous_disease == 'copd' %}selected{% endif %}>COPD</option>
+                <option value="thyroid_disorder" {% if previous_disease == 'thyroid_disorder' %}selected{% endif %}>Thyroid Disorder</option>
+                <option value="epilepsy" {% if previous_disease == 'epilepsy' %}selected{% endif %}>Epilepsy</option>
+                <option value="allergy" {% if previous_disease == 'allergy' %}selected{% endif %}>Allergy</option>
+                <option value="tuberculosis" {% if previous_disease == 'tuberculosis' %}selected{% endif %}>Tuberculosis</option>
+                <option value="migraine" {% if previous_disease == 'migraine' %}selected{% endif %}>Migraine</option>
+                <option value="cancer" {% if previous_disease == 'cancer' %}selected{% endif %}>Cancer</option>
+                <option value="other" {% if previous_disease == 'other' %}selected{% endif %}>Other</option>
+              </select>
+              <div class="invalid-feedback">Previous disease is required for patients</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="mb-1 text-muted" for="first_name">First Name</label>
+              <input id="first_name" type="text" class="form-control" name="user_firstname" value="{{ user_firstname }}" required autofocus />
+              <div class="invalid-feedback">First Name is required</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="mb-1 text-muted" for="last_name">Last Name</label>
+              <input id="last_name" type="text" class="form-control" name="user_lastname" value="{{ user_lastname }}" required autofocus />
+              <div class="invalid-feedback">Last Name is required</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+          <div class="h-100 border rounded-3 p-3 p-md-4 bg-white">
+            <div class="mb-3">
+              <label class="mb-1 text-muted" for="id_user">Username</label>
+              <input id="id_user" type="text" class="form-control" name="user_id" value="{{ user_id }}" required autofocus />
+              <div class="invalid-feedback">username is required</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="mb-1 text-muted" for="select_gender">Gender</label>
+              <select class="form-select" aria-label="Default select example" name="user_gender" id="select_gender">
+                <option value="Male" {% if user_gender == 'Male' %}selected{% endif %}>Male</option>
+                <option value="Female" {% if user_gender == 'Female' %}selected{% endif %}>Female</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="mb-1 text-muted" for="birthday">Birthday</label>
+              <input id="birthday" type="date" class="form-control" name="birthday" value="{{ birthday }}" required />
+              <div class="invalid-feedback">Birthday is invalid</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="mb-1 text-muted" for="email">E-mail Address</label>
+              <input id="email" type="email" class="form-control" name="email" value="{{ email }}" required />
+              <div class="invalid-feedback">Email is invalid</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="mb-1 text-muted" for="password">Password</label>
+              <input id="password" type="password" class="form-control" name="password" required />
+              <div class="invalid-feedback">Password is required</div>
+            </div>
+
+            <div class="mb-0">
+              <label class="mb-1 text-muted" for="conf__password">Confirm Password</label>
+              <input id="conf__password" type="password" class="form-control" name="conf_password" required />
+              <div class="invalid-feedback">Password is required</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+          <div class="h-100 border rounded-3 p-3 p-md-4 bg-white">
+            <div class="mb-3">
+              <label class="mb-1 text-muted" for="recovery_question">Special Key Question</label>
+              <select class="form-select" name="recovery_question" id="recovery_question" required>
+                <option value="">Select a question</option>
+                <option value="pet_name" {% if recovery_question == 'pet_name' %}selected{% endif %}>What is your pet name?</option>
+                <option value="first_school" {% if recovery_question == 'first_school' %}selected{% endif %}>What is your first school name?</option>
+                <option value="hobby" {% if recovery_question == 'hobby' %}selected{% endif %}>What is your favorite hobby?</option>
+              </select>
+              <div class="invalid-feedback">Security question is required</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="mb-1 text-muted" for="recovery_answer">Special Key Answer</label>
+              <input id="recovery_answer" type="text" class="form-control" name="recovery_answer" required />
+              <div class="invalid-feedback">Security answer is required</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="mb-1 text-muted" for="AddressLine">Address Line</label>
+              <input id="AddressLine" type="text" class="form-control mb-2" name="address_line" value="{{ address_line }}" placeholder="Address Line" required autofocus />
+              <input id="Region" type="text" class="form-control mb-2" name="region" value="{{ region }}" placeholder="Region" required autofocus />
+              <input id="City" type="text" class="form-control mb-2" name="city" value="{{ city }}" placeholder="City" required autofocus />
+              <input id="Pincode" type="text" class="form-control" name="pincode" value="{{ pincode }}" placeholder="Code Postal" required autofocus />
+              <div class="invalid-feedback">Address is required</div>
+            </div>
+
+            <div class="mb-0">
+              <label for="pic" class="form-label mb-1 text-muted">Profile Avatar</label>
+              <input type="file" class="form-control" name="profile_pic" id="pic" required>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div id="specialty_block" class="mb-3" style="display: none;">
-        <label class="mb-2 text-muted" for="specialty">Specialty</label>
-        <select class="form-select" name="specialty" id="specialty" {% if user_config == 'Doctor' %}required{% endif %}>
-          <option value="">Select specialty</option>
-          {% for item in specialties %}
-            <option value="{{ item.id }}" {% if specialty == item.id|stringformat:'s' %}selected{% endif %}>{{ item.name }}</option>
-          {% endfor %}
-        </select>
-        <div class="invalid-feedback">Specialty is required for doctors</div>
-      </div>
-      
-      <div id="bio_block" class="mb-3" style="display: none;">
-          <label class="mb-2 text-muted" for="bio">Bio</label>
-          <textarea id="bio" class="form-control" name="bio" {% if user_config == 'Doctor' %}required{% endif %}></textarea>
-          <div class="invalid-feedback">Bio is required for doctors</div>
-      </div>
-      
-      <div id="disease_block" class="mb-3" style="display: none;">
-        <label class="mb-2 text-muted" for="previous_disease">Previous Disease</label>
-        <select class="form-select" name="previous_disease" id="previous_disease" {% if user_config == 'Patient' %}required{% endif %}>
-          <option value="">Select previous disease</option>
-          <option value="none" {% if previous_disease == 'none' %}selected{% endif %}>None</option>
-          <option value="diabetes" {% if previous_disease == 'diabetes' %}selected{% endif %}>Diabetes</option>
-          <option value="hypertension" {% if previous_disease == 'hypertension' %}selected{% endif %}>Hypertension</option>
-          <option value="asthma" {% if previous_disease == 'asthma' %}selected{% endif %}>Asthma</option>
-          <option value="heart_disease" {% if previous_disease == 'heart_disease' %}selected{% endif %}>Heart Disease</option>
-          <option value="arthritis" {% if previous_disease == 'arthritis' %}selected{% endif %}>Arthritis</option>
-          <option value="chronic_kidney_disease" {% if previous_disease == 'chronic_kidney_disease' %}selected{% endif %}>Chronic Kidney Disease</option>
-          <option value="copd" {% if previous_disease == 'copd' %}selected{% endif %}>COPD</option>
-          <option value="thyroid_disorder" {% if previous_disease == 'thyroid_disorder' %}selected{% endif %}>Thyroid Disorder</option>
-          <option value="epilepsy" {% if previous_disease == 'epilepsy' %}selected{% endif %}>Epilepsy</option>
-          <option value="allergy" {% if previous_disease == 'allergy' %}selected{% endif %}>Allergy</option>
-          <option value="tuberculosis" {% if previous_disease == 'tuberculosis' %}selected{% endif %}>Tuberculosis</option>
-          <option value="migraine" {% if previous_disease == 'migraine' %}selected{% endif %}>Migraine</option>
-          <option value="cancer" {% if previous_disease == 'cancer' %}selected{% endif %}>Cancer</option>
-          <option value="other" {% if previous_disease == 'other' %}selected{% endif %}>Other</option>
-        </select>
-        <div class="invalid-feedback">Previous disease is required for patients</div>
-      </div>
-
-      <div class="mb-3">
-        <label class="mb-2 text-muted" for="id_user">Username</label>
-        <input id="id_user" type="text" class="form-control" name="user_id" value="{{ user_id }}" required autofocus />
-        <div class="invalid-feedback">username is required</div>
-      </div>
-
-      <div class="mb-3">
-        <label class="mb-2 text-muted" for="first_name">First Name</label>
-        <input id="first_name" type="text" class="form-control" name="user_firstname" value="{{ user_firstname }}" required autofocus />
-        <div class="invalid-feedback">First Name is required</div>
-      </div>
-
-      <div class="mb-3">
-        <label class="mb-2 text-muted" for="last_name">Last Name</label>
-        <input id="last_name" type="text" class="form-control" name="user_lastname" value="{{ user_lastname }}" required autofocus />
-        <div class="invalid-feedback">Last Name is required</div>
-      </div>
-      
-      <div class="mb-3">
-        <label class="mb-2 text-muted" for="select_gender">Gender</label>
-        <select class="form-select" aria-label="Default select example" name="user_gender" id="select_gender">
-          <option value="Male" {% if user_gender == 'Male' %}selected{% endif %}>Male</option>
-          <option value="Female" {% if user_gender == 'Female' %}selected{% endif %}>Female</option>
-        </select>
-      </div>   
-      
-      <div class="mb-3" >
-        <label class="mb-2 text-muted" for="birthday">Birthday</label>
-        <input id="birthday" type="date" class="form-control" name="birthday" value="{{ birthday }}" required />
-        <div class="invalid-feedback">Birthday is invalid</div>
-      </div>
-      
-      <div class="mb-3" >
-        <label class="mb-2 text-muted" for="email">E-mail Address</label>
-        <input id="email" type="email" class="form-control" name="email" value="{{ email }}" required />
-        <div class="invalid-feedback">Email is invalid</div>
-      </div>
-
-      <div class="mb-3">
-        <label class="mb-2 text-muted" for="password">Password</label>
-        <input id="password" type="password" class="form-control" name="password" required />
-        <div class="invalid-feedback">Password is required</div>
-      </div>
-
-      <div class="mb-3">
-        <label class="mb-2 text-muted" for="conf__password">Confirm Password</label>
-        <input id="conf__password" type="password" class="form-control" name="conf_password" required />
-        <div class="invalid-feedback">Password is required</div>
-      </div>
-
-      <div class="mb-3">
-        <label class="mb-2 text-muted" for="recovery_question">Special Key Question</label>
-        <select class="form-select" name="recovery_question" id="recovery_question" required>
-          <option value="">Select a question</option>
-          <option value="pet_name" {% if recovery_question == 'pet_name' %}selected{% endif %}>What is your pet name?</option>
-          <option value="first_school" {% if recovery_question == 'first_school' %}selected{% endif %}>What is your first school name?</option>
-          <option value="hobby" {% if recovery_question == 'hobby' %}selected{% endif %}>What is your favorite hobby?</option>
-        </select>
-        <div class="invalid-feedback">Security question is required</div>
-      </div>
-
-      <div class="mb-3">
-        <label class="mb-2 text-muted" for="recovery_answer">Special Key Answer</label>
-        <input id="recovery_answer" type="text" class="form-control" name="recovery_answer" required />
-        <div class="invalid-feedback">Security answer is required</div>
-      </div>
-
-      <div class="mb-3">
-        <label class="mb-2 text-muted" for="AddressLine">Address Line</label>
-        <input id="AddressLine" type="text" class="form-control mb-2" name="address_line" value="{{ address_line }}" placeholder="Address Line" required autofocus />
-        <input id="Region" type="text" class="form-control mb-2" name="region" value="{{ region }}" placeholder="Region" required autofocus />
-        <input id="City" type="text" class="form-control mb-2" name="city" value="{{ city }}" placeholder="City" required autofocus />
-        <input id="Pincode" type="text" class="form-control" name="pincode" value="{{ pincode }}" placeholder="Code Postal" required autofocus />
-        <div class="invalid-feedback">Address is required</div>
-      </div>
-      
-      <div class="mb-3 col-12 col-md-12">
-        <label for="pic" class="form-label text-muted">Profile Avatar</label>
-        <input type="file" class="form-control p-3"  name="profile_pic" id="pic"  required>
-      </div>
-
-      <p class="form-text text-muted mb-3">
+      <p class="form-text text-muted mt-4 mb-3">
         By registering you agree with our terms and condition.
       </p>
 
@@ -190,6 +207,10 @@
       var specialtyField = document.getElementById('specialty');
       var bioField = document.getElementById('bio');
       var diseaseField = document.getElementById('previous_disease');
+
+      if (!specialtyBlock || !bioBlock || !diseaseBlock || !specialtyField || !bioField || !diseaseField) {
+        return;
+      }
 
       if (userConfig === 'Doctor') {
         specialtyBlock.style.display = 'block';

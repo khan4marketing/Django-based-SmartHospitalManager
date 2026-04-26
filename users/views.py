@@ -123,6 +123,7 @@ def register(request):
         patient.save()
 
     messages.success(request, 'Your account has been successfully registered. Please login.', extra_tags='success')
+    return redirect('login')
 
 
   return render(request, 'users/register.html', {'specialties': specialties})
@@ -233,3 +234,26 @@ def forgot_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+
+def member_auth_view(request, member_id, page_type):
+  member_template_map = {
+    '23303189': 'id1',
+    '23303152': 'id2',
+    '2330358': 'id3',
+    '23303162': 'id4',
+    '23303163': 'id5',
+  }
+  allowed_pages = {'login', 'register'}
+
+  if member_id not in member_template_map or page_type not in allowed_pages:
+    return redirect('login')
+
+  template_member_id = member_template_map[member_id]
+
+  return render(request, f'users/member_auth/{page_type}-{template_member_id}.html', {
+    'member_id': member_id,
+    'page_type': page_type,
+    'switch_login_url_name': f'login-{member_id}',
+    'switch_register_url_name': f'register-{member_id}',
+  })

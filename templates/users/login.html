@@ -27,6 +27,16 @@
       {% endfor %} {% endif %}
 
       <div class="mb-3">
+        <label class="mb-2 text-muted" for="user_config">Login As</label>
+        <select class="form-select" name="user_config" id="user_config" required>
+          <option value="" disabled {% if not selected_user_config %}selected{% endif %}>Select role</option>
+          <option value="Doctor" {% if selected_user_config == 'Doctor' %}selected{% endif %}>Doctor</option>
+          <option value="Patient" {% if selected_user_config == 'Patient' %}selected{% endif %}>Patient</option>
+        </select>
+        <div class="invalid-feedback">Please select a login role</div>
+      </div>
+
+      <div class="mb-3">
         <label class="mb-2 text-muted" for="email">User ID</label>
         <input
           id="email"
@@ -43,19 +53,6 @@
       <div class="mb-3">
         <div class="mb-2 w-100">
           <label class="text-muted" for="password">Password</label>
-          <a href="{% url 'password-reset' %}" class="float-end primary-color"
-            >Forgot Password?</a
-          >
-        </div>
-
-        <div class="mb-3">
-          <label class="mb-2 text-muted" for="user_config">Login As</label>
-          <select class="form-select" name="user_config" id="user_config" required>
-            <option value="" disabled {% if not selected_user_config %}selected{% endif %}>Select role</option>
-            <option value="Doctor" {% if selected_user_config == 'Doctor' %}selected{% endif %}>Doctor</option>
-            <option value="Patient" {% if selected_user_config == 'Patient' %}selected{% endif %}>Patient</option>
-          </select>
-          <div class="invalid-feedback">Please select a login role</div>
         </div>
 
         <input
@@ -65,6 +62,9 @@
           name="password"
           required
         />
+        <a href="{% url 'password-reset' %}" class="primary-color d-inline-block mt-2"
+          >Forgot Password?</a
+        >
         <div class="invalid-feedback">Password is required</div>
       </div>
 
