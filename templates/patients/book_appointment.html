@@ -1,0 +1,120 @@
+{% extends 'patients/base.html' %} {% load static %} {% block title %}
+BookAppointment {% endblock title %} {% block page_title %} Book Appointment
+{%endblock page_title %} {% block content %}
+
+<main>
+  <h2 class="dash-title">Doctors Available</h2>
+  <section class="recent">
+    <div class="filter-section my-2">
+      <form method="get" class="d-md-flex justify-content-between align-items-center text-dark">
+        <div class="form-group mr-3">
+            <label for="filter_speciality" class="mr-2">Specialty:</label>
+
+            <select name="filter_speciality" class="form-control form-select" id="filter_speciality">
+              <option value="All" {% if not filter_speciality or filter_speciality == 'All' %}selected{% endif %}>All</option>
+              {% for speciality in specialities %}
+              <option value="{{speciality.name}}" {% if filter_speciality == speciality.name %}selected{% endif %} >{{speciality.name}}</option>
+              {%endfor%}
+            </select>
+        </div>
+        <div class="form-group mr-3">
+            <label for="filter_doctor_name" class="mr-2">Doctor Name:</label>
+            <input type="text" name="filter_doctor_name" id="filter_doctor_name" class="form-control" value="{% if filter_doctor_name is not None %}{{ filter_doctor_name }}{% endif %}">
+        </div>
+        <div class="form-group mr-3">
+            <label for="filter_city" class="mr-2">City:</label>
+            <input type="text" name="filter_city" id="filter_city" class="form-control" value="{% if filter_city is not None %}{{ filter_city }}{% endif %}">
+          </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+    </div>
+    <div class="table-div">
+      <div class="row justify-content-left">
+        {% for doctor in doctors %}
+
+        <div class="card mb-3 shadow col-12 col-md-10" style="margin-left: 2%">
+          <div class="row g-0">
+            <div
+              class="col-md-4 text-center p-2"
+              style="max-height: 90%; max-width: 40%"
+            >
+              <img
+                src="{{ doctor.user.profile_avatar.url }}"
+                class="rounded"
+                style="
+                  height: 70%;
+                  width: 59%;
+                  margin-top: 7%;
+                  border: 2px solid #EFA323;
+                  border-radius: 200px;
+                "
+                alt="..."
+              />
+            </div>
+            <input
+              type="hidden"
+              id="custId"
+              name="doctorid"
+              value="{{ doctor.user.username }}"
+            />
+            <div class="col-md-8">
+              <div class="card-body">
+                <h5 class="card-title mt-2">
+                  Dr. {{ doctor.user.first_name}} {{ doctor.user.last_name }}
+                </h5>
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <th scope="col"><i class="bi bi-book-fill"></i> Email</th>
+                      <td scope="col">{{ doctor.user.email }}</td>
+                    </tr>
+                    <tr>
+                      <th scope="col">
+                        <i class="bi bi-layers-fill"></i> username
+                      </th>
+                      <td scope="col">{{ doctor.user.username }}</td>
+                    </tr>
+                    <tr>
+                      <th scope="col">
+                        <i class="bi bi-diagram-2"></i> Address
+                      </th>
+                      <td scope="col">
+                        {{ doctor.user.id_address.address_line }}, {{ doctor.user.id_address.region }}, {{ doctor.user.id_address.city }}, {{ doctor.user.id_address.code_postal }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="container-new-example ps-5">
+                <a href="/patient_confirm_book/{{ doctor.user.username }}/"
+                  ><button type="submit" class="glow-on-hover btn primary-color-background btn-primary mb-3 " value="Submit">
+                    Book appointment
+                  </button></a
+                >
+              </div>
+            </div>
+            <div
+              class="text-left mb-1"
+              style="float: left; margin-left: 7%; margin-top: -5%"
+            >
+              <p class="card-text">
+                <small class="text-muted"
+                  ><i
+                    class="bi bi-envelope-fill"
+                    style="text-decoration: none"
+                  ></i>
+                  {{ doctor.user.email }}</small
+                >
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+</main>
+
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'patients/base.html' %} 
+{% load static %} 
+{% block title %} Dashboard {% endblock title %} 
+{% block page_title %} Patient Dashboard {% endblock page_title %} 
+{% block content %}
+<main>
+  <h2 class="dash-title">Appointment Booking Confirmation</h2>
+  <section class="recent">
+    <div class="table-div bg-white">
+      <div >
+        <div class="container">
+          <div class="row">
+            <div class="col-md-10 border p-4 shadow text-black" style="width: 100%; border-radius: 20px">
+              <div class="col-12 text-black">
+                <h3>Doctor Name: {{ doctor.user.last_name }} {{ doctor.user.first_name }}</h3>
+              </div>
+              <form method="POST" class="needs-validation" nonalidate="" autocomplete="off" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="first-name" style="color: black">First Name:</label><br />
+                    <input type="text" class="form-control" name="foname" id="first-name" value="{{ request.user.first_name }}" disabled />
+                  </div>
+                  <div class="col-md-6">
+                    <label for="last-name" style="color: black">Last Name:</label><br />
+                    <input type="text" class="form-control" id="last-name" name="loname" value="{{ request.user.last_name }}" disabled />
+                  </div>
+                  <div class="col-md-6">
+                    <label for="dates" style="color: black">Select Date:</label><br />
+                    <input type="date" class="form-control" id="dates" name="date" placeholder="Enter Date" required />
+                  </div>
+                  <div class="col-md-6">
+                    <label for="times" style="color: black">Select Time:</label><br />
+                    <select name="time" class="form-select">
+                      {% for time in times %}
+                      <option value="{{time.time}}">{{time.time}}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-12 mt-3">
+                    <label for="spec" style="color: black">Summary:</label><br />
+                    <input type="text" class="form-control" name="summary" id="spec" required />
+                  </div>
+                  <div class="col-md-12 mt-3">
+                    <label for="message" style="color: black">Description:</label><br />
+                    <textarea class="form-control" id="message" name="description"style="resize: vertical;"></textarea>
+                  </div>
+                  <div class="col-12 mt-5">
+                    <button type="submit" class="btn btn-success float-end">Book Appointment</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}
