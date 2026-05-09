@@ -12,10 +12,10 @@
   </head>
 
   <body>
-    <section class="h-100">
-      <div class="container h-100">
-        <div class="row justify-content-sm-center h-100">
-          <div class="col-xxl-4 col-xl-5 col-lg-5 col-md-7 col-sm-9">
+    <section class="min-vh-100 py-3 py-md-4">
+      <div class="{% block page_container_class %}container h-100{% endblock page_container_class %}">
+        <div class="{% block page_row_class %}row justify-content-sm-center h-100{% endblock page_row_class %}">
+          <div class="{% block page_col_class %}col-xxl-4 col-xl-5 col-lg-5 col-md-7 col-sm-9{% endblock page_col_class %}">
             <div class="text-center my-5" style="height: 80px;">
               <img src="{% static 'img/logo.png' %}" alt="logo" class="img-fluid" style="max-height: 70px; max-width: 270px;" />
             </div>
