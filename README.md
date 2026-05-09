@@ -1,166 +1,152 @@
-# Hospital Management 
+# Smart Hospital Manager
 
-<br/>
-<p align="center">
-  <a href="https://github.com/hamzaezzine/Hospital-Management">
-    <img src="static/img/logo.png" alt="Logo"  height="80">
-  </a>
+A Django-based hospital management platform focused on clean role-based workflows for doctors and patients.
 
-  <h3 align="center">Hospital Management</h3>
+## Project Highlights
 
-  <p align="center">
-    Hospital Management Django Website
-    <br/>
-    <br/>
-    <a href="https://github.com/hamzaezzine/Hospital-Management">View Demo</a>
-    .
-    <a href="https://github.com/hamzaezzine/Hospital-Management/issues">Report Bug</a>
-    .
-    <a href="https://github.com/hamzaezzine/Hospital-Management/issues">Request Feature</a>
-  </p>
-</p>
+- Role-based authentication for Doctor and Patient users
+- Dedicated dashboards for each role
+- Editable profile page with image upload
+- Recovery question based password reset flow
+- Random demo data generator for fast local testing
 
-![Contributors](https://img.shields.io/github/contributors/hamzaezzine/Hospital-Management?color=dark-green) ![Forks](https://img.shields.io/github/forks/hamzaezzine/Hospital-Management?style=social) ![Stargazers](https://img.shields.io/github/stars/hamzaezzine/Hospital-Management?style=social) ![Issues](https://img.shields.io/github/issues/hamzaezzine/Hospital-Management) 
+## Tech Stack
 
-## Table Of Contents
+| Layer | Technology |
+| --- | --- |
+| Backend | Django 6 |
+| Database | MySQL 8 |
+| Image Handling | Pillow |
+| MySQL Driver | PyMySQL |
 
-- [Hospital Management](#hospital-management)
-  - [Table Of Contents](#table-of-contents)
-  - [About The Project](#about-the-project)
-  - [Built With](#built-with)
-  - [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-  - [Usage](#usage)
-  - [Live Demo](#live-demo)
-  - [Conception](#conception)
-  - [Screenshots](#screenshots)
-  - [Seed Database](#seed-database)
+## Quick Start
 
-## About The Project
-
-The Hospital Management Django project is designed to streamline the interaction between doctors and patients. Doctors have the capability to upload blogs or save them as drafts, allowing them to share valuable medical information and insights. Additionally, the system enables doctors to manage appointments by checking, accepting, or canceling them. This ensures efficient scheduling and communication between healthcare providers and patients.
-
-For patients, the project offers a user-friendly interface for registration and login. Once logged in, patients can access the blog section to read and comment on doctors' posts. The appointment booking feature allows patients to choose a specific doctor based on filters and schedule appointments. Patients can also view their past appointments, creating a comprehensive and accessible record of their medical history. Overall, this Hospital Management system enhances communication and accessibility in the healthcare process for both doctors and patients.
-
-## Built With
-
-**FRONT-END :**
-- HTML
-- CSS 
- - JS
-- Bootstrap
-- jQuery
-
-**BACK-END :**
- - Python
-- Django
-- SQLite
-
-## Getting Started
-
-To get started with the Hospital Management System, follow the instructions below.
-
-### Prerequisites
-
-Make sure you have the following prerequisites installed on your machine:
-
-- Python
-
-### Installation
-
-1. Clone the repository to your local machine:
+For most users, this is enough:
 
 ```bash
-   git clone https://github.com/hamzaezzine/Hospital-Management  
-```
-
-2. Create virtual environmenet  :  
-```bash
-   virtualenv env
-   or  
-   python -m venv env
-```
-then start the environmenet :  
-```bash
-  env\Scripts\activate
-```
-
-3. Navigate to the project directory:
-```bash 
-cd Hospital-Management
-```
-
-5. Install the required dependencies:
-```bash
+git clone https://github.com/your-username/your-repo.git
+cd SmartHospitalManager
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-7. Apply migrations to set up the database:
-```bash 
 python manage.py migrate
-```
-
-## Usage
-
-1. Start the development server:  
-```bash
+python manage.py seed_users --doctors 10 --patients 10 --password Pass@123
 python manage.py runserver
 ```
 
-3. Open your web browser and visit http://localhost:8000 to access the Hospital Management System.
+Open: http://127.0.0.1:8000/
 
-4. Follow the on-screen instructions to register/login as a doctor or patient.
+## New Device Setup (Windows)
 
-5. Explore the features, including blog management, appointment scheduling, and more.
+### 1) Install MySQL Server
 
-## Live Demo
-Check Website Online here : [Hospital Management](https://hamzaezzine.pythonanywhere.com/)
+Choose one:
 
-
-## Conception
-1. Database Schema
-![db](screenshots/db.png)
-
-2. Use Case Diagram : 
-![usecase](screenshots/usecase.PNG)
-
-## Screenshots
-- Login Page : 
-![login](screenshots/login.PNG)
-
-- Register Page : 
-![register](screenshots/register.PNG)
-
-- Profile Page : 
-![profile](screenshots/profile.PNG)
-
-- Blogs : 
-![blogs](screenshots/blogs.PNG)
-
-- Upload Blog Page : 
-![upload_blog](screenshots/upload_blog.PNG)
-
-- Draft Blogs Page : 
-![draft_blog](screenshots/draft_blog.PNG)
-
-- Doctor Appointments Page : 
-![doctor_app](screenshots/doctor_app.PNG)
-
-- Patient Book Appointments Page : 
-![patient_book_app](screenshots/patient_book_app.PNG)
-
-- Patient Confirm Appointments Page : 
-![patient_confirm_app](screenshots/patient_confirm_app.PNG)
-
-- Patient View Appointments Page : 
-![patient_view_app](screenshots/patient_view_app.PNG)
-
-
-## Seed Database
 ```bash
-python manage.py loaddata seed/categories.json 
-python manage.py loaddata seed/specialities.json
-python manage.py loaddata seed/status.json
-python manage.py loaddata seed/time.json
+winget install Oracle.MySQL
 ```
+
+```bash
+choco install mysql
+```
+
+Or install from the official MySQL Installer Community package.
+
+Verify installation:
+
+```bash
+mysql --version
+```
+
+### 2) Start MySQL Service
+
+```bash
+net start MySQL80
+```
+
+### 3) Create Project Database
+
+Login with default project credentials:
+
+```bash
+mysql -u root -p1234 -h 127.0.0.1 -P 3306
+```
+
+Then run:
+
+```sql
+CREATE DATABASE hospital_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+### 4) Install Python Dependencies
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+For Git Bash activation:
+
+```bash
+source .venv/Scripts/activate
+```
+
+### 5) Apply Migrations, Seed, and Run
+
+```bash
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py seed_users --doctors 10 --patients 10 --password Pass@123
+python manage.py runserver
+```
+
+## MySQL Credentials (Current Project)
+
+| Key | Value |
+| --- | --- |
+| Username | root |
+| Password | 1234 |
+| Host | 127.0.0.1 |
+| Port | 3306 |
+| Database name | hospital_db |
+
+If your machine uses different credentials, update the DATABASES values in hospital/settings.py.
+
+## Seed Demo Data
+
+Generate random users for testing:
+
+```bash
+python manage.py seed_users
+```
+
+Custom counts:
+
+```bash
+python manage.py seed_users --doctors 10 --patients 10 --password Pass@123
+```
+
+## Migration Guide
+
+- Use `python manage.py makemigrations` only when model files change.
+- For command-only changes (example: users/management/commands/seed_users.py), `makemigrations` is not required.
+
+## Optional Team-Friendly MySQL User
+
+Instead of sharing root, create a dedicated user per machine:
+
+```sql
+CREATE USER 'hospital_user'@'localhost' IDENTIFIED BY 'strong_password_here';
+GRANT ALL PRIVILEGES ON hospital_db.* TO 'hospital_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+Then update USER and PASSWORD in hospital/settings.py.
+
+## Project Notes
+
+- MySQL is used for local development.
+- media/ stores uploaded profile images.
+- static/ contains static assets.
+
