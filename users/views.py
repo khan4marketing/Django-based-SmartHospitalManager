@@ -17,6 +17,12 @@ Users = get_user_model()
 
 def register(request):
   specialities = Specialty.objects.all()
+  diseases = []
+  try:
+    from .models import Disease
+    diseases = Disease.objects.all()
+  except Exception:
+    diseases = []
   if request.method == 'POST':
     user_status = request.POST.get('user_config')
     first_name = request.POST.get('user_firstname')
@@ -68,7 +74,23 @@ def register(request):
 
     if user_status == 'Doctor':
       specialty = request.POST.get('Speciality')
-      specialty_name = Specialty.objects.get(name=specialty)
+      try:
+        specialty_name = Specialty.objects.get(name=specialty)
+      except Specialty.DoesNotExist:
+        messages.error(request, 'Selected specialty does not exist. Please choose a valid specialty.')
+        return render(request, 'users/register.html', context={
+          'user_config': user_status,
+          'user_firstname': first_name,
+          'user_lastname': last_name,
+          'user_id': username,
+          'email': email,
+          'user_gender': gender,
+          'address_line': address_line,
+          'region': region,
+          'city': city,
+          'pincode': pincode,
+          'specialities': specialities
+        })
       bio = request.POST.get('bio')
       doctor = Doctors.objects.create(user=user, specialty=specialty_name, bio=bio)
       doctor.save()
@@ -77,12 +99,27 @@ def register(request):
         insurance = request.POST.get('insurance')
         patient = Patients.objects.create(user=user, insurance=insurance)
         patient.save()
+        # attach any selected previous diseases
+        selected = request.POST.getlist('diseases')
+        if selected:
+          try:
+            disease_objs = []
+            from .models import Disease
+            for d in selected:
+              try:
+                disease_objs.append(Disease.objects.get(name=d))
+              except Disease.DoesNotExist:
+                continue
+            if disease_objs:
+              patient.diseases.set(disease_objs)
+          except Exception:
+            pass
 
     messages.success(request, 'Your account has been successfully registered. Please login.', extra_tags='success')
     return redirect('login')
 
 
-  return render(request, 'users/register.html' , {'specialities':specialities})
+  return render(request, 'users/register.html' , {'specialities':specialities, 'diseases': diseases})
 
 
 def login_view(request):

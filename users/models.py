@@ -45,11 +45,26 @@ class Reste_token(models.Model):
 class Specialty(models.Model):
     name = models.CharField(max_length=25 , unique=True)
     description = models.TextField()
+  # optional key to keep mapping to seed data
+  disease_key = models.CharField(max_length=50, blank=True, null=True)
     
     class Meta:
       verbose_name = "Specialty"
       verbose_name_plural = "Specialty"
     
+    def __str__(self):
+      return self.name
+
+
+class Disease(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True)
+    specialties = models.ManyToManyField(Specialty, related_name='diseases', blank=True)
+
+    class Meta:
+      verbose_name = "Disease"
+      verbose_name_plural = "Diseases"
+
     def __str__(self):
       return self.name
     
@@ -69,6 +84,7 @@ class Doctors(models.Model):
 class Patients(models.Model):
   user = models.OneToOneField(Users, on_delete=models.CASCADE, primary_key=True)
   insurance = models.CharField(max_length=50)
+  diseases = models.ManyToManyField(Disease, blank=True, related_name='patients')
   
   class Meta:
     verbose_name = "Patient"

@@ -36,7 +36,12 @@
 
       <div id="specialty_block" class="mb-3" style="display: none;">
         <label class="mb-2 text-muted" for="specialty">Specialty</label>
-        <input type="text" name="specialty" class="form-control" id="specialty" placeholder="Type your specialty" {% if user_config == 'Doctor' %}required{% endif %}>
+        <select name="Speciality" id="specialty" class="form-select" {% if user_config == 'Doctor' %}required{% endif %}>
+          <option value="">Select a specialty</option>
+          {% for s in specialities %}
+            <option value="{{ s.name }}">{{ s.name }}</option>
+          {% endfor %}
+        </select>
         <div class="invalid-feedback">Specialty is required for doctors</div>
       </div>
       
@@ -50,6 +55,16 @@
           <label class="mb-2 text-muted" for="insurance">Insurance</label>
           <input id="insurance" type="text" class="form-control" name="insurance" {% if user_config == 'Patient' %}required{% endif %} />
           <div class="invalid-feedback">Insurance is required for patients</div>
+      </div>
+
+      <div id="diseases_block" class="mb-3" style="display: none;">
+        <label class="mb-2 text-muted">Previous Diseases</label>
+        <select name="diseases" id="diseases" class="form-select" multiple>
+          {% for d in diseases %}
+            <option value="{{ d.name }}">{{ d.name }}</option>
+          {% endfor %}
+        </select>
+        <div class="form-text">Hold Ctrl (or Cmd) to select multiple.</div>
       </div>
 
       <div class="mb-3">
@@ -177,6 +192,7 @@
         specialtyField.setAttribute('required', 'required');
         bioField.setAttribute('required', 'required');
         insuranceField.removeAttribute('required');
+          document.getElementById('diseases_block').style.display = 'none';
       } else if (userConfig === 'Patient') {
         specialtyBlock.style.display = 'none';
         bioBlock.style.display = 'none';
@@ -185,6 +201,7 @@
         specialtyField.removeAttribute('required');
         bioField.removeAttribute('required');
         insuranceField.setAttribute('required', 'required');
+        document.getElementById('diseases_block').style.display = 'block';
       }
     }
   });
