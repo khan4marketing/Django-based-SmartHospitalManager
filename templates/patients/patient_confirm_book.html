@@ -14,6 +14,11 @@
               <div class="col-12 text-black">
                 <h3>Doctor Name: {{ doctor.user.last_name }} {{ doctor.user.first_name }}</h3>
               </div>
+              {% if messages %}
+                {% for message in messages %}
+                  <div class="alert alert-danger">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
               <form method="POST" class="needs-validation" nonalidate="" autocomplete="off" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="row g-3">
@@ -27,7 +32,7 @@
                   </div>
                   <div class="col-md-6">
                     <label for="dates" style="color: black">Select Date:</label><br />
-                    <input type="date" class="form-control" id="dates" name="date" placeholder="Enter Date" required />
+                    <input type="date" class="form-control" id="dates" name="date" placeholder="Enter Date" value="{{ date|default_if_none:'' }}" required />
                   </div>
                   <div class="col-md-6">
                     <label for="times" style="color: black">Select Time:</label><br />
@@ -39,11 +44,11 @@
                   </div>
                   <div class="col-md-12 mt-3">
                     <label for="spec" style="color: black">Summary:</label><br />
-                    <input type="text" class="form-control" name="summary" id="spec" required />
+                    <input type="text" class="form-control" name="summary" id="spec" required value="{{ summary|default_if_none:'' }}" />
                   </div>
                   <div class="col-md-12 mt-3">
                     <label for="message" style="color: black">Description:</label><br />
-                    <textarea class="form-control" id="message" name="description"style="resize: vertical;"></textarea>
+                    <textarea class="form-control" id="message" name="description" style="resize: vertical;">{{ description|default_if_none:'' }}</textarea>
                   </div>
                   <div class="col-12 mt-5">
                     <button type="submit" class="btn btn-success float-end">Book Appointment</button>

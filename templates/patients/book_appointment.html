@@ -86,11 +86,9 @@ BookAppointment {% endblock title %} {% block page_title %} Book Appointment
                 </table>
               </div>
               <div class="container-new-example ps-5">
-                <a href="/patient_confirm_book/{{ doctor.user.username }}/"
-                  ><button type="submit" class="glow-on-hover btn primary-color-background btn-primary mb-3 " value="Submit">
-                    Book appointment
-                  </button></a
-                >
+                <a href="{% url 'patient_confirm_book' doctor.user.username %}" class="glow-on-hover btn primary-color-background btn-primary mb-3">
+                  Book appointment
+                </a>
               </div>
             </div>
             <div
