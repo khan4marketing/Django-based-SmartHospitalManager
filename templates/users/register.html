@@ -51,12 +51,6 @@
           <div class="invalid-feedback">Bio is required for doctors</div>
       </div>
       
-      <div id="insurance_block" class="mb-3" style="display: none;">
-          <label class="mb-2 text-muted" for="insurance">Insurance</label>
-          <input id="insurance" type="text" class="form-control" name="insurance" {% if user_config == 'Patient' %}required{% endif %} />
-          <div class="invalid-feedback">Insurance is required for patients</div>
-      </div>
-
       <div id="diseases_block" class="mb-3" style="display: none;">
         <label class="mb-2 text-muted">Previous Diseases</label>
         <select name="diseases" id="diseases" class="form-select" multiple>
@@ -179,28 +173,22 @@
       var userConfig = document.getElementById('user_status').value;
       var specialtyBlock = document.getElementById('specialty_block');
       var bioBlock = document.getElementById('bio_block');
-      var insuranceBlock = document.getElementById('insurance_block');
       var specialtyField = document.getElementById('specialty');
       var bioField = document.getElementById('bio');
-      var insuranceField = document.getElementById('insurance');
 
       if (userConfig === 'Doctor') {
         specialtyBlock.style.display = 'block';
         bioBlock.style.display = 'block';
-        insuranceBlock.style.display = 'none';
 
         specialtyField.setAttribute('required', 'required');
         bioField.setAttribute('required', 'required');
-        insuranceField.removeAttribute('required');
-          document.getElementById('diseases_block').style.display = 'none';
+        document.getElementById('diseases_block').style.display = 'none';
       } else if (userConfig === 'Patient') {
         specialtyBlock.style.display = 'none';
         bioBlock.style.display = 'none';
-        insuranceBlock.style.display = 'block';
 
         specialtyField.removeAttribute('required');
         bioField.removeAttribute('required');
-        insuranceField.setAttribute('required', 'required');
         document.getElementById('diseases_block').style.display = 'block';
       }
     }

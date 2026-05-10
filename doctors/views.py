@@ -17,33 +17,37 @@ User = get_user_model()
 
 @login_required(login_url='/login')
 def doctor_dashboard(request):
-    doctor = request.user.doctors
+  doctor = request.user.doctors
+  doctor_specialty = doctor.specialty.name if doctor.specialty else 'Not set'
 
-    total_blogs = Blogs.objects.filter(doctor=doctor).count()
-    published_blogs = Blogs.objects.filter(doctor=doctor, is_published=True).count()
-    draft_blogs = Blogs.objects.filter(doctor=doctor, is_published=False).count()
+  total_blogs = Blogs.objects.filter(doctor=doctor).count()
+  published_blogs = Blogs.objects.filter(doctor=doctor, is_published=True).count()
+  draft_blogs = Blogs.objects.filter(doctor=doctor, is_published=False).count()
 
-    total_appointments = Appointment.objects.filter(doctor=doctor).count()
-    accepted_appointments = Appointment.objects.filter(doctor=doctor, status__status='Accepted').count()
-    waited_appointments = Appointment.objects.filter(doctor=doctor, status__status='Waited').count()
-    cancelled_appointments = Appointment.objects.filter(doctor=doctor, status__status='Cancelled').count()
+  total_appointments = Appointment.objects.filter(doctor=doctor).count()
+  accepted_appointments = Appointment.objects.filter(doctor=doctor, status__status='Accepted').count()
+  waited_appointments = Appointment.objects.filter(doctor=doctor, status__status='Waited').count()
+  cancelled_appointments = Appointment.objects.filter(doctor=doctor, status__status='Cancelled').count()
+  total_patients = Appointment.objects.filter(doctor=doctor).values('patient').distinct().count()
 
-    current_month = date.today().month
-    appointments_per_day = Appointment.objects.filter(
-        doctor=doctor,
-        start_date__month=current_month
-    ).values('start_date').annotate(count=Count('start_date')).order_by('start_date')
+  current_month = date.today().month
+  appointments_per_day = Appointment.objects.filter(
+    doctor=doctor,
+    start_date__month=current_month,
+  ).values('start_date').annotate(count=Count('start_date')).order_by('start_date')
 
-    return render(request, 'doctors/doctor_dashboard.html', {
-        'total_blogs': total_blogs,
-        'published_blogs': published_blogs,
-        'draft_blogs': draft_blogs,
-        'total_appointments': total_appointments,
-        'accepted_appointments': accepted_appointments,
-        'waited_appointments': waited_appointments,
-        'cancelled_appointments': cancelled_appointments,
-        'appointments_per_day': appointments_per_day,
-    })
+  return render(request, 'doctors/doctor_dashboard.html', {
+    'doctor_specialty': doctor_specialty,
+    'total_patients': total_patients,
+    'total_blogs': total_blogs,
+    'published_blogs': published_blogs,
+    'draft_blogs': draft_blogs,
+    'total_appointments': total_appointments,
+    'accepted_appointments': accepted_appointments,
+    'waited_appointments': waited_appointments,
+    'cancelled_appointments': cancelled_appointments,
+    'appointments_per_day': appointments_per_day,
+  })
 
 @login_required(login_url='/login')
 def profile(request):
@@ -74,10 +78,7 @@ def profile(request):
           doctor_profile.specialty = specialty_name
           doctor_profile.bio = request.POST.get('bio')
           doctor_profile.save()
-        else:
-          patient_profile = user.patients
-          patient_profile.insurance = request.POST.get('insurance')
-          patient_profile.save()
+
 
 
 

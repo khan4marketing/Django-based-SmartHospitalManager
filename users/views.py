@@ -8,21 +8,57 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model
-from .models import Doctors, Patients, Address , Reste_token , Specialty
+from .models import Doctors, Patients, Address , Reste_token , Specialty, Disease
 from .helpers import send_email
 import uuid
 
 
 Users = get_user_model()
 
+
+def ensure_registration_reference_data():
+  disease_specialty_map = {
+    'Heart Disease': ['Cardiology', 'General Health'],
+    'Skin Disease': ['Dermatology', 'General Health'],
+    'Bone and Joint Problems': ['Orthopedics', 'Rheumatology'],
+    'Digestive Disease': ['Gastroenterology', 'General Health'],
+    'Brain and Nerve Disease': ['Neurology', 'Psychiatry'],
+    'Eye Disease': ['Ophthalmology', 'General Health'],
+    'Child Health Issues': ['Pediatrics', 'General Health'],
+    'Mental Health Disorder': ['Psychiatry', 'General Health']
+  }
+
+  all_specialties = set()
+  for related_specialties in disease_specialty_map.values():
+    all_specialties.update(related_specialties)
+
+  for specialty_name in all_specialties:
+    Specialty.objects.get_or_create(
+      name=specialty_name,
+      defaults={'description': f'{specialty_name} specialist care.'}
+    )
+
+  for disease_name, related_specialties in disease_specialty_map.items():
+    disease, _ = Disease.objects.get_or_create(
+      name=disease_name,
+      defaults={'description': f'History of {disease_name.lower()}.'}
+    )
+    specialties = Specialty.objects.filter(name__in=related_specialties)
+    disease.specialties.set(specialties)
+
 def register(request):
-  specialities = Specialty.objects.all()
-  diseases = []
-  try:
-    from .models import Disease
-    diseases = Disease.objects.all()
-  except Exception:
-    diseases = []
+  ensure_registration_reference_data()
+  specialities = Specialty.objects.all().order_by('name')
+  diseases = Disease.objects.all().order_by('name')
+
+  def registration_context(extra=None):
+    ctx = {
+      'specialities': specialities,
+      'diseases': diseases,
+    }
+    if extra:
+      ctx.update(extra)
+    return ctx
   if request.method == 'POST':
     user_status = request.POST.get('user_config')
     first_name = request.POST.get('user_firstname')
@@ -45,15 +81,35 @@ def register(request):
 
     if len(password) < 6:
       messages.error(request, 'Password must be at least 6 characters long.')
-      return render(request, 'users/register.html', context={'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode})
+      return render(request, 'users/register.html', context=registration_context({'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode}))
 
     if password != confirm_password:
       messages.error(request, 'Passwords do not match.')
-      return render(request, 'users/register.html', context={'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode})
+      return render(request, 'users/register.html', context=registration_context({'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode}))
 
     if Users.objects.filter(username=username).exists():
       messages.error(request, 'Username already exists. Try again with a different username.')
-      return render(request, 'users/register.html', context={'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode})
+      return render(request, 'users/register.html', context=registration_context({'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode}))
+
+    specialty_name = None
+    if user_status == 'Doctor':
+      specialty = request.POST.get('Speciality')
+      try:
+        specialty_name = Specialty.objects.get(name=specialty)
+      except Specialty.DoesNotExist:
+        messages.error(request, 'Selected specialty does not exist. Please choose a valid specialty.')
+        return render(request, 'users/register.html', context=registration_context({
+          'user_config': user_status,
+          'user_firstname': first_name,
+          'user_lastname': last_name,
+          'user_id': username,
+          'email': email,
+          'user_gender': gender,
+          'address_line': address_line,
+          'region': region,
+          'city': city,
+          'pincode': pincode
+        }))
 
     address = Address.objects.create(address_line=address_line, region=region,city=city, code_postal=pincode)
 
@@ -73,53 +129,25 @@ def register(request):
     user.save()
 
     if user_status == 'Doctor':
-      specialty = request.POST.get('Speciality')
-      try:
-        specialty_name = Specialty.objects.get(name=specialty)
-      except Specialty.DoesNotExist:
-        messages.error(request, 'Selected specialty does not exist. Please choose a valid specialty.')
-        return render(request, 'users/register.html', context={
-          'user_config': user_status,
-          'user_firstname': first_name,
-          'user_lastname': last_name,
-          'user_id': username,
-          'email': email,
-          'user_gender': gender,
-          'address_line': address_line,
-          'region': region,
-          'city': city,
-          'pincode': pincode,
-          'specialities': specialities
-        })
       bio = request.POST.get('bio')
       doctor = Doctors.objects.create(user=user, specialty=specialty_name, bio=bio)
       doctor.save()
         
     elif user_status == 'Patient':
-        insurance = request.POST.get('insurance')
-        patient = Patients.objects.create(user=user, insurance=insurance)
+        patient = Patients.objects.create(user=user)
         patient.save()
         # attach any selected previous diseases
         selected = request.POST.getlist('diseases')
         if selected:
-          try:
-            disease_objs = []
-            from .models import Disease
-            for d in selected:
-              try:
-                disease_objs.append(Disease.objects.get(name=d))
-              except Disease.DoesNotExist:
-                continue
-            if disease_objs:
-              patient.diseases.set(disease_objs)
-          except Exception:
-            pass
+          disease_objs = Disease.objects.filter(name__in=selected)
+          if disease_objs.exists():
+            patient.diseases.set(disease_objs)
 
     messages.success(request, 'Your account has been successfully registered. Please login.', extra_tags='success')
     return redirect('login')
 
 
-  return render(request, 'users/register.html' , {'specialities':specialities, 'diseases': diseases})
+  return render(request, 'users/register.html', registration_context())
 
 
 def login_view(request):

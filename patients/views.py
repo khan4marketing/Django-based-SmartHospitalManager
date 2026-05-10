@@ -7,14 +7,31 @@ from django.core.paginator import Paginator
 from datetime import datetime
 from django.urls import reverse
 from users.models import Doctors , Specialty , Patients
-from patients.models import Appointment , Time , Status
+from patients.models import Appointment , Time , Status, Reminder
 
 User = get_user_model()
 
 
 @login_required(login_url='/login')
 def patient_dashboard(request):
-  return render(request,'patients/patient_dashboard.html')
+  if request.method == 'POST' and request.POST.get('add_reminder'):
+    title = request.POST.get('title')
+    date = request.POST.get('date') or None
+    note = request.POST.get('note')
+    Reminder.objects.create(user=request.user, title=title, date=date, note=note)
+
+  patient_profile = Patients.objects.filter(user=request.user).first()
+  previous_diseases = []
+  if patient_profile:
+    previous_diseases = list(patient_profile.diseases.values_list('name', flat=True))
+
+  reminders = Reminder.objects.filter(user=request.user).order_by('-created_at')
+
+  return render(request, 'patients/patient_dashboard.html', {
+    'previous_diseases': previous_diseases,
+    'previous_disease_count': len(previous_diseases),
+    'reminders': reminders,
+  })
 
 
 @login_required(login_url='/login')

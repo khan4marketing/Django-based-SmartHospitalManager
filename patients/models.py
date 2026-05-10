@@ -1,5 +1,7 @@
 from django.db import models
 from users.models import Patients ,Doctors
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class Time(models.Model):
     time = models.CharField(max_length=10)
@@ -30,5 +32,20 @@ class Appointment(models.Model):
         verbose_name_plural = "Appointments"
     def __str__(self):
         return self.summary
+
+
+class Reminder(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=150)
+    date = models.DateField(null=True, blank=True)
+    note = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Reminder"
+        verbose_name_plural = "Reminders"
+
+    def __str__(self):
+        return f"{self.title} ({self.user})"
     
 

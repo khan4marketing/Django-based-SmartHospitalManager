@@ -50,15 +50,52 @@
     
       <!-- Modal -->
       <div class="modal fade" id="Remainder" tabindex="-1" aria-labelledby="Remainder" aria-hidden="true">
-        <!-- Modal content -->
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Add Reminder</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+              {% csrf_token %}
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label for="title" class="form-label">Title</label>
+                  <input type="text" class="form-control" name="title" id="title" required />
+                </div>
+                <div class="mb-3">
+                  <label for="date" class="form-label">Date</label>
+                  <input type="date" class="form-control" name="date" id="date" />
+                </div>
+                <div class="mb-3">
+                  <label for="note" class="form-label">Note</label>
+                  <textarea class="form-control" name="note" id="note" rows="3"></textarea>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" name="add_reminder" value="1" class="btn btn-primary">Add</button>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
       <!-- /Modal -->
 
       <div style="overflow-y: scroll; height: 130px;">
-        <div class="alert" role="alert">
-          <h6 class="alert-heading fw-bold">Remainder Tittle</h6>
-          <p class="">Aucun Remainder</p>
-        </div>
+        {% if reminders and reminders.count > 0 %}
+          {% for r in reminders %}
+            <div class="alert" role="alert">
+              <h6 class="alert-heading fw-bold">{{ r.title }}</h6>
+              <p class="">{% if r.date %}On {{ r.date }} — {% endif %}{{ r.note }}</p>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="alert" role="alert">
+            <h6 class="alert-heading fw-bold">No Reminders</h6>
+            <p class="">You have no reminders.</p>
+          </div>
+        {% endif %}
       </div>
     </div>
 
@@ -67,15 +104,19 @@
       <div class="summary-single">
         <span class="ti-id-badge"></span>
         <div>
-          <h5>Maladie</h5>
-          <small>Fes</small>
+          <h5>Previous Diseases</h5>
+          {% if previous_diseases %}
+            <small>{{ previous_diseases|join:", " }}</small>
+          {% else %}
+            <small>No previous disease added</small>
+          {% endif %}
         </div>
       </div>
       <div class="summary-single">
         <span class="ti-face-smile"></span>
         <div>
-          <h5>Hospital</h5>
-          <small>Department</small>
+          <h5>{{ previous_disease_count }}</h5>
+          <small>Total Previous Diseases</small>
         </div>
       </div>
     </div>
@@ -97,21 +138,6 @@
       </div>
       
       <div class="summary">
-        <div class="bday-card shadow">
-          <div class="bday-flex justify-content-between">
-            <div class="col-3">
-              <img src="https://missionvet.ca/wp-content/uploads/2020/01/User-Profile-PNG-1.png" class="img-fluid" style="width: 50px; border-radius: 50%;">
-            </div>
-            <div class="bday-info col-8">
-              <h5>Patient</h5>
-              <small>Birthday Today</small><br>   
-              <button class="btn btn-dark btn-sm">
-                <span class="ti-gift"></span>
-                Wish him
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </section>

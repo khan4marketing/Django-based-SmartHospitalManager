@@ -101,13 +101,7 @@
                   <div class="invalid-feedback">Last Name is required</div>
                 </div>
 
-                {% if not request.user.is_doctor %}
-                  <div class="mb-3">
-                    <label class="mb-2 fw-bold" for="insurance">Insurance </label>
-                    <input id="insurance" type="text" class="form-control" name="insurance" value="{{ basicdata.patients.insurance }}" required />
-                    <div class="invalid-feedback">Insurance is required for patients</div>
-                  </div>
-                {% else %}
+                {% if request.user.is_doctor %}
                   <div class="mb-3">
                     <label class="mb-2 fw-bold" for="specialty">Specialty</label>
                     <select name="Speciality" class="form-select" id="">
