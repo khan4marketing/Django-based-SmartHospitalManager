@@ -94,6 +94,7 @@
         <span class="fw-bold fs-6 ms-1 text-dark me-4">{{ request.user.username|safe | truncatechars:"10" }}</span>
       </a>
     </header>
+    {% include 'partials/messages.html' %}
     {% block content %}
     {% endblock content %}
 
