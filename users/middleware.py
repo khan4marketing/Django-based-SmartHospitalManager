@@ -11,7 +11,6 @@ class LoginRequiredPathMiddleware:
             'patient_dashboard/',
             'doctor/profile/',
             'patient/profile/',
-            'profile/',
         )
         self.doctor_only_prefixes = (
             'doctor_dashboard/',

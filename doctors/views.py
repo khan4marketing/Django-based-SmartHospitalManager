@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from datetime import datetime, date
 from django.db.models import Q, Count
 from django.urls import reverse
@@ -17,7 +19,17 @@ User = get_user_model()
 
 @login_required(login_url='/login')
 def doctor_dashboard(request):
-  doctor = request.user.doctors
+  # resolve doctor profile safely to avoid RelatedObjectDoesNotExist
+  doctor = Doctors.objects.filter(user=request.user).first()
+
+  if not doctor:
+    if request.user.is_doctor:
+      messages.error(request, 'Doctor profile not found. Please complete your profile.')
+      return redirect('doctor_profile')
+    else:
+      messages.error(request, 'Only doctor accounts can view the doctor dashboard.')
+      return redirect('patient_dashboard')
+
   doctor_specialty = doctor.specialty.name if doctor.specialty else 'Not set'
 
   total_blogs = Blogs.objects.filter(doctor=doctor).count()
@@ -283,8 +295,16 @@ def post_comment(request):
 def doctor_myblogs(request):
 
   user = request.user
-  author = get_object_or_404(Doctors, user=user)
-  
+  author = Doctors.objects.filter(user=user).first()
+
+  if not author:
+    if request.user.is_doctor:
+      messages.error(request, 'Doctor profile not found. Please complete your doctor profile.')
+      return redirect('doctor_dashboard')
+    else:
+      messages.error(request, 'Only doctor accounts can view this page.')
+      return redirect('patient_dashboard')
+
   blogs = Blogs.objects.filter(doctor=author, is_published=True).order_by('-posted_at')
   categories = Category.objects.all()
 
@@ -303,22 +323,73 @@ def doctor_myblogs(request):
 
 @login_required(login_url='/login')
 def doctor_drafts(request):
-    user = request.user
-    author = get_object_or_404(Doctors, user=user)
+  user = request.user
+  # avoid raising 404 if the user does not have a Doctors profile yet
+  author = Doctors.objects.filter(user=user).first()
 
+  if author:
     drafts = Blogs.objects.filter(doctor=author, is_published=False).order_by('-posted_at')
-    categories = Category.objects.all()
+  else:
+    drafts = Blogs.objects.none()
 
-    paginator = Paginator(drafts, 5)
-    page = request.GET.get('page')
-    drafts_page = paginator.get_page(page)
+  categories = Category.objects.all()
 
-    context = {
-        'drafts': drafts_page,
-        'categories': categories,
-    }
+  paginator = Paginator(drafts, 5)
+  page = request.GET.get('page')
+  drafts_page = paginator.get_page(page)
 
-    return render(request, 'doctors/doctor_drafts.html', context)
+  context = {
+      'drafts': drafts_page,
+      'categories': categories,
+  }
+
+  return render(request, 'doctors/doctor_drafts.html', context)
+
+
+@login_required(login_url='/login')
+@require_POST
+def doctor_publish_draft(request):
+  blog_id = request.POST.get('id')
+  doctor = Doctors.objects.filter(user=request.user).first()
+
+  if not blog_id:
+    return JsonResponse({'ok': False, 'message': 'Missing draft id.'}, status=400)
+
+  if not doctor:
+    return JsonResponse({'ok': False, 'message': 'Doctor profile not found.'}, status=404)
+
+  blog = Blogs.objects.filter(blog_id=blog_id, doctor=doctor, is_published=False).first()
+  if not blog:
+    return JsonResponse({'ok': False, 'message': 'Draft not found.'}, status=404)
+
+  blog.is_published = True
+  blog.posted_at = datetime.now()
+  blog.save()
+
+  return JsonResponse({'ok': True, 'message': 'Draft published successfully.'})
+
+
+@login_required(login_url='/login')
+@require_POST
+def doctor_delete_draft(request):
+  blog_id = request.POST.get('id')
+  doctor = Doctors.objects.filter(user=request.user).first()
+
+  if not blog_id:
+    return JsonResponse({'ok': False, 'message': 'Missing draft id.'}, status=400)
+
+  if not doctor:
+    return JsonResponse({'ok': False, 'message': 'Doctor profile not found.'}, status=404)
+
+  blog = Blogs.objects.filter(blog_id=blog_id, doctor=doctor, is_published=False).first()
+  if not blog:
+    return JsonResponse({'ok': False, 'message': 'Draft not found.'}, status=404)
+
+  if blog.thumbnail:
+    default_storage.delete(blog.thumbnail.name)
+
+  blog.delete()
+  return JsonResponse({'ok': True, 'message': 'Draft deleted successfully.'})
 
 
 @login_required(login_url='/login')

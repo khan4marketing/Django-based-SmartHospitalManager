@@ -13,7 +13,7 @@
     >
       {% csrf_token %} {% if messages %} {% for message in messages %}
       <div
-        class="alert alert-danger alert-dismissible fade show mt-3"
+        class="alert {% if 'success' in message.tags %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show mt-3"
         role="alert"
       >
         {{ message }}

@@ -1,55 +1,120 @@
 {% extends 'doctors/base.html' %}
 {% load static %}
 
-{% block title %} Blogs {% endblock title %}
-{% block page_title %} Blogs {% endblock page_title %}
+{% block title %}Drafted Blogs{% endblock title %}
+{% block page_title %}Drafted Blogs{% endblock page_title %}
 
 {% block content %}
-<main>
-  <h2 class="dash-title">Drafted Blogs</h2>
-  <section class="recent">
-    {% for post in drafts %}
-      <div class="table-div">
-        <div class="card text-dark mb-3 shadow border-light border" style="border-radius: 5px;">
-          <div class="card-header fw-bold" style="background-color: rgb(202, 218, 238);">
-            {{ forloop.counter }}.{{ post.title }}</div>
-          <div class="card-body row">
-            <div class="col-12 col-md-6">
-              <img class="img-fluid" src="{{post.thumbnail.url}}" alt="" style="height:40%;width:40%;">
-              <table class="table">
-                <tbody>
-                  <tr>
-                    <th scope="col">Title:</th>
-                    <td scope="col">{{ post.title }}</td>
-                  </tr>
-                  <tr>
-                    <th scope="col">Description</th>
-                    <td scope="col">{{ post.description |safe|truncatechars:100|linebreaks }}</td>
-                  </tr>                
-                  <tr>
-                    <th scope="col">Date</th>
-                    <td scope="col">{{ post.posted_at}}</td>
-                  </tr>
-                  <div class="col-md-12 form-group">
-                    <input type="hidden" class="form-control" name='id' value="{{post.id}}"
-                      id="website" placeholder="Website (optional)">
+<main class="px-3 pb-4" data-publish-url="{% url 'doctor_publish_draft' %}" data-delete-url="{% url 'doctor_delete_draft' %}">
+  <link href="{% static 'css/doctor_drafts.css' %}" rel="stylesheet">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="input-group search-group" style="min-width:260px;">
+        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+        <input id="draft-search" type="search" class="form-control" placeholder="Search drafts by title...">
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">Filter</button>
+        <ul class="dropdown-menu p-3" style="min-width:260px;">
+          <label class="form-label mb-1">Sort</label>
+          <select id="draft-sort" class="form-select mb-2">
+            <option value="all">All Drafts</option>
+            <option value="recent">Recent</option>
+            <option value="oldest">Oldest</option>
+          </select>
+          <label class="form-label mb-1">Category</label>
+          <select id="draft-category" class="form-select">
+            <option value="all">All Categories</option>
+            {% if categories %}
+              {% for cat in categories %}
+                <option value="{{ cat.id_category }}">{{ cat.name }}</option>
+              {% endfor %}
+            {% endif %}
+          </select>
+        </ul>
+      </div>
+    </div>
+
+    <div>
+      <a href="{% url 'upload_blog' %}" class="btn btn-primary btn-lg shadow-sm create-draft-btn">
+        <i class="bi bi-plus-circle me-1"></i> + Create New Draft
+      </a>
+    </div>
+  </div>
+
+  {% csrf_token %}
+
+  {% if drafts and drafts|length > 0 %}
+    <div id="draft-list" class="row g-3">
+      {% for post in drafts %}
+        <div class="col-12 col-md-6 col-lg-4 draft-card-wrapper" data-title="{{ post.title|lower }}" data-category="{% if post.id_category %}{{ post.id_category.id_category }}{% else %}0{% endif %}" data-updated="{{ post.posted_at }}">
+          <div class="card draft-card h-100 shadow-sm">
+            <div class="row g-0 h-100">
+              <div class="col-4 d-none d-sm-block">
+                <img src="{% if post.thumbnail %}{{ post.thumbnail.url }}{% else %}{% static 'img/placeholder.png' %}{% endif %}" class="img-fluid rounded-start h-100 w-100 object-cover" alt="thumbnail">
+              </div>
+              <div class="col-12 col-sm-8">
+                <div class="card-body d-flex flex-column h-100">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <h5 class="card-title mb-1">{{ post.title|truncatechars:60 }}</h5>
+                    <span class="badge bg-secondary">Draft</span>
                   </div>
-                </tbody>
-              </table>
-            </div>
-            <div class="col-12 col-md-6 text-center">
-              <h4 class="text-start fs-6"><b>Summary</b></h4>
-              <p class="card-text">
-                {{ post.summary |safe|truncatechars:200|linebreaks  }}
-              </p>
-              <a href="{% url 'upload_blog' post.blog_id %}" class="btn btn-outline-dark edit-draft-btn" >
-                <b>Edit & Upload</b>
-              </a>
+                  <p class="card-subtitle text-muted mb-2 small">{% if post.id_category %}{{ post.id_category.name }}{% else %}Uncategorized{% endif %}</p>
+                  <p class="card-text flex-grow-1 text-truncate desc">{{ post.summary|default:post.description|truncatechars:120|linebreaks }}</p>
+
+                  <div class="d-flex justify-content-between align-items-center mt-2">
+                    <small class="text-muted">Last edited: {{ post.posted_at }}</small>
+                    <div class="btn-group">
+                      <a href="{% url 'upload_blog' post.blog_id %}" class="btn btn-sm btn-outline-primary edit-draft-btn" data-title="{{ post.title|escapejs }}">Edit</a>
+                      <a href="{% url 'upload_blog' post.blog_id %}" class="btn btn-sm btn-outline-success continue-draft-btn" data-title="{{ post.title|escapejs }}">Continue</a>
+                      <button class="btn btn-sm btn-outline-info preview-btn" data-id="{{ post.blog_id }}" data-blogid="{{ post.blog_id }}" data-title="{{ post.title|escapejs }}" data-content="{{ post.description|escapejs }}">Preview</button>
+                      <button class="btn btn-sm btn-outline-warning publish-btn" data-id="{{ post.blog_id }}" data-title="{{ post.title|escapejs }}">Publish</button>
+                      <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ post.blog_id }}" data-title="{{ post.title|escapejs }}">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+      {% endfor %}
+    </div>
+
+    <nav aria-label="Draft pagination" class="mt-4">
+      <ul id="draft-pagination" class="pagination justify-content-center"></ul>
+    </nav>
+
+  {% else %}
+    <div class="empty-state text-center py-5">
+      <img src="{% static 'img/empty-drafts.svg' %}" alt="No Drafts" style="max-width:220px;opacity:0.9;"/>
+      <h4 class="mt-3">No Draft Blogs Available</h4>
+      <p class="text-muted">You don't have any draft blogs yet. Click "+ Create New Draft" to start writing.</p>
+    </div>
+  {% endif %}
+
+  <!-- Preview Modal -->
+  <div class="modal fade" id="draftPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="previewModalTitle" class="modal-title">Preview</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="previewModalBody">
+          <!-- content inserted by JS -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <a id="previewEditLink" class="btn btn-primary" href="#">Edit</a>
+        </div>
       </div>
-    {% endfor %}
-  </section>
+    </div>
+  </div>
+
+  <div id="draft-action-messages" class="action-message-wrap" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="{% static 'js/doctor_drafts.js' %}" defer></script>
 </main>
 {% endblock %}

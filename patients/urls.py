@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import  patient_dashboard, book_appointment, my_appointments ,patient_confirm_book
-from doctors.views import doctor_blogs,search_blogs, profile,blogs_category, view_blog, post_comment 
+from .views import  patient_dashboard, book_appointment, my_appointments ,patient_confirm_book, profile
+from doctors.views import doctor_blogs,search_blogs, blogs_category, view_blog, post_comment 
 urlpatterns = [
   path('patient_dashboard/', patient_dashboard, name='patient_dashboard'),
   path('profile/', profile, name='patient_profile'),

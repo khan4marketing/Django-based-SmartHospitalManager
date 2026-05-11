@@ -21,10 +21,6 @@ BookAppointment {% endblock title %} {% block page_title %} Book Appointment
             <label for="filter_doctor_name" class="mr-2">Doctor Name:</label>
             <input type="text" name="filter_doctor_name" id="filter_doctor_name" class="form-control" value="{% if filter_doctor_name is not None %}{{ filter_doctor_name }}{% endif %}">
         </div>
-        <div class="form-group mr-3">
-            <label for="filter_city" class="mr-2">City:</label>
-            <input type="text" name="filter_city" id="filter_city" class="form-control" value="{% if filter_city is not None %}{{ filter_city }}{% endif %}">
-          </div>
         <button type="submit" class="btn btn-primary">Search</button>
       </form>
     </div>
@@ -86,11 +82,9 @@ BookAppointment {% endblock title %} {% block page_title %} Book Appointment
                 </table>
               </div>
               <div class="container-new-example ps-5">
-                <a href="/patient_confirm_book/{{ doctor.user.username }}/"
-                  ><button type="submit" class="glow-on-hover btn primary-color-background btn-primary mb-3 " value="Submit">
-                    Book appointment
-                  </button></a
-                >
+                <a href="{% url 'patient_confirm_book' doctor.user.username %}" class="glow-on-hover btn primary-color-background btn-primary mb-3">
+                  Book appointment
+                </a>
               </div>
             </div>
             <div
@@ -111,6 +105,14 @@ BookAppointment {% endblock title %} {% block page_title %} Book Appointment
         </div>
 
         {% endfor %}
+
+        {% if not doctors %}
+        <div class="col-12 mt-4">
+          <div class="alert alert-warning mb-0" role="alert">
+            No doctor found for the selected filters. Try changing Specialty, Doctor Name, or City.
+          </div>
+        </div>
+        {% endif %}
       </div>
     </div>
   </section>

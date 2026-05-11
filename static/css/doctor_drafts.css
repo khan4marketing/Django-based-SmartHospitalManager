@@ -1,0 +1,69 @@
+/* Styles for Drafted Blogs page */
+:root{
+  --card-radius:10px;
+  --accent:#0d6efd;
+  --muted:#6c757d;
+}
+
+.draft-card{border-radius:var(--card-radius);overflow:hidden;border:1px solid rgba(0,0,0,0.06)}
+.draft-card .object-cover{object-fit:cover}
+.draft-card .desc{max-height:3.6rem;overflow:hidden}
+.empty-state img{filter:grayscale(0.1)}
+
+/* subtle hover */
+.draft-card:hover{transform:translateY(-6px);box-shadow:0 10px 30px rgba(13,110,253,0.08)}
+.draft-card{transition:all .18s ease-in-out}
+
+/* search and filter */
+.search-group .form-control{border-left:0}
+.input-group-text{border-right:0}
+
+/* buttons */
+.btn-group .btn{border-radius:6px}
+
+/* pagination */
+#draft-pagination .page-item .page-link{border-radius:6px}
+
+/* small screens */
+@media (max-width:576px){
+  .draft-card .card-body{padding:.8rem}
+  .draft-card .desc{max-height:4.5rem}
+}
+
+/* dashboard consistent colors */
+.main-content header{color:#1f2a44}
+
+/* rounded search/dropdown */
+.dropdown-menu{border-radius:8px}
+
+/* preview modal content */
+#previewModalBody img{max-width:100%;height:auto}
+#previewModalBody h2{margin-top:0}
+
+/* responsive grid spacing */
+#draft-list .draft-card-wrapper{display:flex}
+#draft-list .draft-card-wrapper .draft-card{flex:1}
+
+/* action message stack */
+.action-message-wrap{
+  position:fixed;
+  top:1rem;
+  right:1rem;
+  z-index:1080;
+  width:min(92vw, 360px);
+  display:flex;
+  flex-direction:column;
+  gap:.55rem;
+}
+
+.action-message{
+  border-radius:10px;
+  box-shadow:0 10px 24px rgba(31,42,68,.16);
+  margin:0;
+  animation:slideIn .2s ease-out;
+}
+
+@keyframes slideIn{
+  from{opacity:0; transform:translateY(-8px)}
+  to{opacity:1; transform:translateY(0)}
+}
