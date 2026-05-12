@@ -11,7 +11,7 @@ from django.db.models import Q, Count
 from django.urls import reverse
 from django.core.files.storage import default_storage
 
-from patients.models import Appointment, Status
+from patients.models import Appointment, Status, Reminder
 from .models import Blogs, Comments, Category
 from users.models import Doctors, Specialty
 
@@ -19,6 +19,29 @@ User = get_user_model()
 
 @login_required(login_url='/login')
 def doctor_dashboard(request):
+  if request.method == 'POST' and request.POST.get('add_reminder'):
+    title = request.POST.get('title')
+    reminder_date = request.POST.get('date') or None
+    note = request.POST.get('note')
+    normalized_title = (title or '').strip()
+    normalized_note = (note or '').strip()
+
+    if not normalized_title:
+      messages.error(request, 'Reminder title is required.')
+    else:
+      reminder_exists = Reminder.objects.filter(
+        user=request.user,
+        title__iexact=normalized_title,
+        date=reminder_date,
+        note__iexact=normalized_note,
+      ).exists()
+
+      if reminder_exists:
+        messages.error(request, 'Duplicate reminder is not allowed.')
+      else:
+        Reminder.objects.create(user=request.user, title=normalized_title, date=reminder_date, note=normalized_note)
+        messages.success(request, 'Reminder added successfully.')
+
   # resolve doctor profile safely to avoid RelatedObjectDoesNotExist
   doctor = Doctors.objects.filter(user=request.user).first()
 
@@ -31,6 +54,22 @@ def doctor_dashboard(request):
       return redirect('patient_dashboard')
 
   doctor_specialty = doctor.specialty.name if doctor.specialty else 'Not set'
+  reminder_queryset = Reminder.objects.filter(user=request.user).order_by('-created_at')
+  reminders = []
+  seen_reminders = set()
+
+  for reminder in reminder_queryset:
+    reminder_key = (
+      reminder.title.strip().lower(),
+      reminder.date,
+      reminder.note.strip().lower(),
+    )
+
+    if reminder_key in seen_reminders:
+      continue
+
+    seen_reminders.add(reminder_key)
+    reminders.append(reminder)
 
   total_blogs = Blogs.objects.filter(doctor=doctor).count()
   published_blogs = Blogs.objects.filter(doctor=doctor, is_published=True).count()
@@ -59,6 +98,7 @@ def doctor_dashboard(request):
     'waited_appointments': waited_appointments,
     'cancelled_appointments': cancelled_appointments,
     'appointments_per_day': appointments_per_day,
+    'reminders': reminders,
   })
 
 @login_required(login_url='/login')

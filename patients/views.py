@@ -17,21 +17,132 @@ User = get_user_model()
 def patient_dashboard(request):
   if request.method == 'POST' and request.POST.get('add_reminder'):
     title = request.POST.get('title')
-    date = request.POST.get('date') or None
+    reminder_date = request.POST.get('date') or None
     note = request.POST.get('note')
-    Reminder.objects.create(user=request.user, title=title, date=date, note=note)
+    normalized_title = (title or '').strip()
+    normalized_note = (note or '').strip()
+
+    if not normalized_title:
+      messages.error(request, 'Reminder title is required.')
+    else:
+      reminder_exists = Reminder.objects.filter(
+        user=request.user,
+        title__iexact=normalized_title,
+        date=reminder_date,
+        note__iexact=normalized_note,
+      ).exists()
+
+      if reminder_exists:
+        messages.error(request, 'Duplicate reminder is not allowed.')
+      else:
+        Reminder.objects.create(user=request.user, title=normalized_title, date=reminder_date, note=normalized_note)
+        messages.success(request, 'Reminder added successfully.')
 
   patient_profile = Patients.objects.filter(user=request.user).first()
   previous_diseases = []
   if patient_profile:
     previous_diseases = list(patient_profile.diseases.values_list('name', flat=True))
 
-  reminders = Reminder.objects.filter(user=request.user).order_by('-created_at')
+  # Recommendation logic
+  recommended_doctors = []
+  recommended_departments = []
+
+  if patient_profile:
+    # derive specialties from known diseases
+    disease_specialties = set()
+    disease_departments = set()
+    for d in patient_profile.diseases.all():
+      for s in d.specialties.all():
+        disease_specialties.add(s.name)
+        if s.department:
+          disease_departments.add(s.department)
+      if d.suggested_department:
+        disease_departments.add(d.suggested_department)
+
+    # simple symptom-to-specialty mapping
+    symptoms_text = (patient_profile.current_symptoms or '').lower()
+    symptom_map = {
+      'chest': 'Cardiologist',
+      'pain': 'Cardiologist',
+      'fever': 'Physician',
+      'cough': 'Physician',
+      'skin': 'Dermatologist',
+      'rash': 'Dermatologist',
+      'eye': 'Ophthalmologist',
+      'vision': 'Ophthalmologist',
+      'depress': 'Psychiatrist',
+      'anxiet': 'Psychiatrist',
+      'diabet': 'Endocrinologist',
+      'kidney': 'Nephrologist'
+    }
+
+    for k, spec in symptom_map.items():
+      if k in symptoms_text:
+        disease_specialties.add(spec)
+
+    # Age based suggestions (example thresholds)
+    if patient_profile.age:
+      age = patient_profile.age
+      if age >= 60:
+        disease_specialties.add('Geriatrician')
+      if age <= 12:
+        disease_specialties.add('Pediatrician')
+
+    # collect specialty objects
+    preferred_specialties = Specialty.objects.filter(name__in=list(disease_specialties))
+
+    # departments from specialties
+    for s in preferred_specialties:
+      if s.department:
+        disease_departments.add(s.department)
+
+    recommended_departments = list(disease_departments)
+
+    # find matching doctors, prioritize available and highly rated
+    doctors_qs = Doctors.objects.none()
+    if preferred_specialties.exists():
+      doctors_qs = Doctors.objects.filter(specialty__in=preferred_specialties).order_by('-online_status','-rating','-years_of_experience')
+    else:
+      # fallback to general physicians
+      doctors_qs = Doctors.objects.filter(specialty__name__in=['Physician','General Medicine']).order_by('-online_status','-rating','-years_of_experience')
+
+    # build a lightweight structure for template
+    for doc in doctors_qs[:8]:
+      times = [t.time for t in doc.available_times.all()]
+      recommended_doctors.append({
+        'username': doc.user.username,
+        'name': doc.user.get_full_name() or doc.user.username,
+        'profile_image': doc.user.profile_avatar.url if doc.user.profile_avatar else '',
+        'specialty': doc.specialty.name,
+        'experience': doc.years_of_experience,
+        'rating': float(doc.rating or 0),
+        'times': times,
+        'room': doc.room_number,
+        'online': doc.online_status,
+      })
+  reminder_queryset = Reminder.objects.filter(user=request.user).order_by('-created_at')
+  reminders = []
+  seen_reminders = set()
+
+  for reminder in reminder_queryset:
+    reminder_key = (
+      reminder.title.strip().lower(),
+      reminder.date,
+      reminder.note.strip().lower(),
+    )
+
+    if reminder_key in seen_reminders:
+      continue
+
+    seen_reminders.add(reminder_key)
+    reminders.append(reminder)
 
   return render(request, 'patients/patient_dashboard.html', {
     'previous_diseases': previous_diseases,
     'previous_disease_count': len(previous_diseases),
     'reminders': reminders,
+    'recommended_doctors': recommended_doctors,
+    'recommended_departments': recommended_departments,
   })
 
 

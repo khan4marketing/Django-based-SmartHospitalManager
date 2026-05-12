@@ -61,35 +61,48 @@
                           <div>  <h5 class="modal-title" id="exampleModalLabel">Add  Remainder</h5> </div>
                           <div > <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> </div>
                       </div>
-                      <form action="">
+                        <form method="post">
+                        {% csrf_token %}
                       <div class="modal-body">
                               <div class="mb-3">
                                   <label for="title" class="form-label"> <i class="bi bi-calendar"></i> Tittle</label>
-                                  <input type="text" class="form-control" id="title" placeholder="Enter Remainder title">
+                              <input type="text" class="form-control" id="title" name="title" placeholder="Enter Remainder title" required>
                               </div>
                               <div class="mb-3">
                                   <label for="date" class="form-label"> <i class="bi bi-calendar"></i> Date</label>
-                                  <input type="Date" class="form-control" id="date" aria-describedby="date">
+                              <input type="date" class="form-control" id="date" name="date" aria-describedby="date">
                               </div>
 
                               <div class="form-floating">
-                                  <textarea class="form-control" placeholder="Leave a comment here" id="text" style="height: 100px"></textarea>
-                                  <label for="text">Comments</label>
+                              <textarea class="form-control" placeholder="Leave a comment here" id="text" name="note" style="height: 100px"></textarea>
+                              <label for="text">Comments</label>
                               </div>
                       </div>
                       <div class="modal-footer">
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      <button type="button" class="btn btn-primary">Add</button>
+                        <button type="submit" name="add_reminder" value="1" class="btn btn-primary">Add</button>
                       </div>
                       </form>
                   </div>
                   </div>
               </div>
               <div style = "overflow-y: scroll; height: 130px;">
-                  <div class="alert " role="alert">
-                      <h6 class="alert-heading fw-bold">Remainder Tittle</h6>
-                      <p class="">This is a friendly reminder that you have an appointment with [Patient's Name] on [Date] at [Time].</p>
-                  </div>
+                  {% if reminders %}
+                    {% for reminder in reminders %}
+                      <div class="alert alert-light" role="alert">
+                          <h6 class="alert-heading fw-bold">{{ reminder.title }}</h6>
+                          <p class="mb-1">{{ reminder.note }}</p>
+                          {% if reminder.date %}
+                            <small class="text-muted">{{ reminder.date }}</small>
+                          {% endif %}
+                      </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="alert alert-light" role="alert">
+                        <h6 class="alert-heading fw-bold">No reminders</h6>
+                        <p class="mb-0">You have not added any reminders yet.</p>
+                    </div>
+                  {% endif %}
               </div>
       </div>
 

@@ -58,9 +58,6 @@
       <div class="mb-3">
         <div class="mb-2 w-100">
           <label class="text-muted" for="password">Password</label>
-          <a href="{% url 'password-reset' %}" class="float-end primary-color"
-            >Forgot Password?</a
-          >
         </div>
 
         <input
@@ -77,6 +74,8 @@
         <div class="form-check">
           <label for="remember" class="form-check-label"></label>
         </div>
+
+        <a href="{% url 'password-reset' %}" class="me-3 text-decoration-none primary-color">Forgot Password?</a>
 
         <button
           type="submit"
