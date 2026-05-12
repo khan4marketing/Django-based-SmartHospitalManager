@@ -8,12 +8,29 @@ from django.db.models import Q
 from datetime import datetime
 from django.urls import reverse
 from users.models import Doctors , Specialty , Patients
+from users.decorators import patient_required
 from patients.models import Appointment , Time , Status, Reminder
+from django.contrib import messages
+
+def ensure_appointment_reference_data():
+  # create some default time slots and statuses if the tables are empty
+  if Time.objects.count() == 0:
+    default_times = [
+      '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+      '11:00', '11:30', '12:00', '13:00', '14:00', '15:00',
+      '16:00', '16:30', '17:00'
+    ]
+    for t in default_times:
+      Time.objects.get_or_create(time=t)
+  if Status.objects.count() == 0:
+    default_status = ['Waited', 'Accepted', 'Cancelled', 'Completed']
+    for s in default_status:
+      Status.objects.get_or_create(status=s)
 
 User = get_user_model()
 
 
-@login_required(login_url='/login')
+@patient_required
 def patient_dashboard(request):
   if request.method == 'POST' and request.POST.get('add_reminder'):
     title = request.POST.get('title')
@@ -205,7 +222,7 @@ def profile(request):
   })
 
 
-@login_required(login_url='/login')
+@patient_required
 def my_appointments(request):
   if request.user.is_doctor:
     messages.error(request, 'Only patient accounts can view appointments.')
@@ -238,13 +255,14 @@ def my_appointments(request):
 
 
 
-@login_required(login_url='/login')
+@patient_required
 def book_appointment(request):
   if request.user.is_doctor:
     messages.error(request, 'Only patient accounts can book appointments.')
     return redirect('doctor_dashboard')
 
   Patients.objects.get_or_create(user=request.user)
+  ensure_appointment_reference_data()
 
   specialities = Specialty.objects.all()
   doctors = Doctors.objects.all()
@@ -272,42 +290,81 @@ def book_appointment(request):
   # return render(request,'patients/book_appointment.html',{"doctors":doctors})
 
 
-@login_required(login_url='/login')
+@patient_required
 def patient_confirm_book(request , doctor):
   if request.user.is_doctor:
     messages.error(request, 'Only patient accounts can book appointments.')
     return redirect('doctor_dashboard')
 
-  patient_profile, _ = Patients.objects.get_or_create(user=request.user)
+  ensure_appointment_reference_data()
 
+  patient_profile, _ = Patients.objects.get_or_create(user=request.user)
   selected_doctor = get_object_or_404(Doctors, user__username=doctor)
 
   if request.method == 'POST':
-    date = request.POST.get("date")
-    summary = request.POST.get("summary")
-    description = request.POST.get("description")
-    time = request.POST.get("time")
-    heure = get_object_or_404(Time, time=time)
-    status = get_object_or_404(Status, status="Waited")
+    try:
+      date = request.POST.get("date")
+      summary = request.POST.get("summary")
+      description = request.POST.get("description")
+      time = request.POST.get("time")
 
-    if not date or not summary or not description:
-      messages.error(request, 'Please fill in all appointment details.')
-      times = Time.objects.all()
-      return render(request, 'patients/patient_confirm_book.html', {'times': times, 'doctor': selected_doctor})
-    
-    appointment = Appointment.objects.create(
-      summary=summary,
-      description=description,
-      start_date=date,
-      time=heure,
-      doctor=selected_doctor,
-      patient=patient_profile,
-      status = status
-    )
-    
-    if appointment:
+      if not date or not summary or not description or not time:
+        messages.error(request, 'Please fill in all appointment details.')
+        times = Time.objects.all()
+        return render(request, 'patients/patient_confirm_book.html', {
+          'times': times,
+          'doctor': selected_doctor,
+          'summary': summary,
+          'description': description,
+          'date': date,
+        })
+
+      try:
+        parsed_date = datetime.strptime(date, '%Y-%m-%d').date()
+      except Exception:
+        messages.error(request, 'Invalid date format. Please use YYYY-MM-DD.')
+        times = Time.objects.all()
+        return render(request, 'patients/patient_confirm_book.html', {
+          'times': times,
+          'doctor': selected_doctor,
+          'summary': summary,
+          'description': description,
+          'date': date,
+        })
+
+      heure, _ = Time.objects.get_or_create(time=time)
+      doctor_obj = selected_doctor
+      status, _ = Status.objects.get_or_create(status="Waited")
+
+      Appointment.objects.create(
+        summary=summary,
+        description=description,
+        start_date=parsed_date,
+        time=heure,
+        doctor=doctor_obj,
+        patient=patient_profile,
+        status=status,
+      )
+
       messages.success(request, 'Appointment booked successfully.')
       return redirect('my_appointments')
-    
+
+    except Exception as e:
+      messages.error(request, f"Could not create appointment: {e}")
+      times = Time.objects.all()
+      return render(request, 'patients/patient_confirm_book.html', {
+        'times': times,
+        'doctor': selected_doctor,
+        'summary': request.POST.get('summary', ''),
+        'description': request.POST.get('description', ''),
+        'date': request.POST.get('date', ''),
+      })
+
   times = Time.objects.all()
-  return render(request, 'patients/patient_confirm_book.html', {'times': times, 'doctor': selected_doctor})
+  return render(request, 'patients/patient_confirm_book.html', {
+    'times': times,
+    'doctor': selected_doctor,
+    'summary': '',
+    'description': '',
+    'date': '',
+  })
