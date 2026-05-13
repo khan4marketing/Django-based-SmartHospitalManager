@@ -7,6 +7,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from users.models import Address, Doctors, Disease, Patients, Specialty
+from users.reference_data import DISEASE_SPECIALTY_MAP, ensure_disease_specialty_reference_data
 
 
 DOCTOR_FIRST_NAMES = [
@@ -54,17 +55,6 @@ LAST_NAMES = [
     'Ferdous',
     'Sultana',
 ]
-
-DISEASE_SPECIALTY_MAP = {
-    'Heart Disease': ['Cardiology', 'General Health'],
-    'Skin Disease': ['Dermatology', 'General Health'],
-    'Bone and Joint Problems': ['Orthopedics', 'Rheumatology'],
-    'Digestive Disease': ['Gastroenterology', 'General Health'],
-    'Brain and Nerve Disease': ['Neurology', 'Psychiatry'],
-    'Eye Disease': ['Ophthalmology', 'General Health'],
-    'Child Health Issues': ['Pediatrics', 'General Health'],
-    'Mental Health Disorder': ['Psychiatry', 'General Health'],
-}
 
 DOCTOR_BIOS = [
     'Experienced clinician focused on compassionate patient care.',
@@ -175,29 +165,8 @@ def _unique_identity(users_model, role, index):
 
 
 def _ensure_reference_data():
-    specialties = []
-    for disease_name, related_specialties in DISEASE_SPECIALTY_MAP.items():
-        for specialty_name in related_specialties:
-            specialty, _ = Specialty.objects.get_or_create(
-                name=specialty_name,
-                defaults={'description': f'{specialty_name} specialist care.'},
-            )
-            specialties.append(specialty)
-
-        disease, _ = Disease.objects.get_or_create(
-            name=disease_name,
-            defaults={'description': f'History of {disease_name.lower()}.'},
-        )
-        disease.specialties.set(Specialty.objects.filter(name__in=related_specialties))
-
-    unique_specialties = []
-    seen_ids = set()
-    for specialty in specialties:
-        if specialty.pk not in seen_ids:
-            seen_ids.add(specialty.pk)
-            unique_specialties.append(specialty)
-
-    return unique_specialties
+    ensure_disease_specialty_reference_data(Specialty, Disease)
+    return list(Specialty.objects.all().order_by('name'))
 
 
 def _random_birthday():

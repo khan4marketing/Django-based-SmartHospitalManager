@@ -17,10 +17,6 @@ BookAppointment {% endblock title %} {% block page_title %} Book Appointment
               {%endfor%}
             </select>
         </div>
-        <div class="form-group mr-3">
-            <label for="filter_doctor_name" class="mr-2">Doctor Name:</label>
-            <input type="text" name="filter_doctor_name" id="filter_doctor_name" class="form-control" value="{% if filter_doctor_name is not None %}{{ filter_doctor_name }}{% endif %}">
-        </div>
         <button type="submit" class="btn btn-primary">Search</button>
       </form>
     </div>

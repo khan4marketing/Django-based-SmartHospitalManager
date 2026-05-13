@@ -9,55 +9,6 @@
 
   <h2 class="dash-title">Patient Dashboard</h2>
   
-  <!-- Recommended Doctors -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <h4 class="mb-3">Recommended Doctors</h4>
-      {% if recommended_doctors %}
-        <div class="row">
-          {% for d in recommended_doctors %}
-            <div class="col-md-4 col-lg-3 mb-3">
-              <div class="card h-100 shadow-sm">
-                {% if d.profile_image %}
-                  <img src="{{ d.profile_image }}" class="card-img-top" alt="{{ d.name }}">
-                {% else %}
-                  <img src="/static/img/doctor_placeholder.png" class="card-img-top" alt="{{ d.name }}">
-                {% endif %}
-                <div class="card-body">
-                  <h5 class="card-title">{{ d.name }}</h5>
-                  <p class="card-text small text-muted">{{ d.specialty }}</p>
-                  <p class="card-text">Rating: <strong>{{ d.rating }}</strong> · Exp: {{ d.experience }} yrs</p>
-                  <p class="card-text small">{% if d.times %}Next: {{ d.times|first }}{% else %}No slots shown{% endif %}</p>
-                </div>
-                <div class="card-footer d-flex justify-content-between">
-                  <a href="{% url 'patient_confirm_book' d.username %}" class="btn btn-primary btn-sm">Quick Book</a>
-                  <a href="{% url 'book_appointment' %}?filter_doctor_name={{ d.name }}" class="btn btn-outline-secondary btn-sm">View</a>
-                </div>
-              </div>
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="alert alert-info">Complete your medical profile to get smart doctor recommendations.</div>
-      {% endif %}
-    </div>
-  </div>
-
-  <!-- Recommended Departments -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <h4 class="mb-3">Recommended Departments</h4>
-      {% if recommended_departments and recommended_departments|length > 0 %}
-        <div class="d-flex flex-wrap gap-2">
-          {% for dept in recommended_departments %}
-            <div class="badge bg-primary text-white p-2">{{ dept.name }}</div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="alert alert-secondary">No departments to suggest yet.</div>
-      {% endif %}
-    </div>
-  </div>
   <div class="row justify-content-between">
 
     <div class="bg-light p-2 shadow col-12 col-lg-4 mb-3">
@@ -190,6 +141,56 @@
       </div>
     </div>
   </section>
+
+  <!-- Recommended Doctors -->
+  <div class="row mb-4 mt-4">
+    <div class="col-12">
+      <h4 class="mb-3">Recommended Doctors</h4>
+      {% if recommended_doctors %}
+        <div class="row">
+          {% for d in recommended_doctors %}
+            <div class="col-md-4 col-lg-3 mb-3">
+              <div class="card h-100 shadow-sm">
+                {% if d.profile_image %}
+                  <img src="{{ d.profile_image }}" class="card-img-top" alt="{{ d.name }}">
+                {% else %}
+                  <img src="/static/img/doctor_placeholder.png" class="card-img-top" alt="{{ d.name }}">
+                {% endif %}
+                <div class="card-body">
+                  <h5 class="card-title">{{ d.name }}</h5>
+                  <p class="card-text small text-muted">{{ d.specialty }}</p>
+                  <p class="card-text">Rating: <strong>{{ d.rating }}</strong> · Exp: {{ d.experience }} yrs</p>
+                  <p class="card-text small">{% if d.times %}Next: {{ d.times|first }}{% else %}No slots shown{% endif %}</p>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                  <a href="{% url 'patient_confirm_book' d.username %}" class="btn btn-primary btn-sm">Quick Book</a>
+                  <a href="{% url 'book_appointment' %}?filter_doctor_name={{ d.name }}" class="btn btn-outline-secondary btn-sm">View</a>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="alert alert-info">No recommended doctors available right now.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recommended Departments -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <h4 class="mb-3">Recommended Departments</h4>
+      {% if recommended_departments and recommended_departments|length > 0 %}
+        <div class="d-flex flex-wrap gap-2">
+          {% for dept in recommended_departments %}
+            <div class="badge bg-primary text-white p-2">{{ dept.name }}</div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="alert alert-secondary">No recommended departments available right now.</div>
+      {% endif %}
+    </div>
+  </div>
 
   <!--graph scripts-->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

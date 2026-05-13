@@ -115,16 +115,16 @@ If your machine uses different credentials, update the DATABASES values in hospi
 
 ## Seed Demo Data
 
-Create the demo users you asked for:
-
-```bash
-python manage.py seed_users --doctors 20 --patients 20 --password Pass@123
-```
-
-If you want to use the default command and let the app create the standard demo set:
+Generate random users for testing:
 
 ```bash
 python manage.py seed_users
+```
+
+Custom counts:
+
+```bash
+python manage.py seed_users --doctors 10 --patients 10 --password Pass@123
 ```
 
 On a fresh database, the project also seeds 20 demo doctors and 20 demo patients automatically after migrations when `AUTO_SEED_DEMO_DATA` is enabled in `hospital/settings.py`.
