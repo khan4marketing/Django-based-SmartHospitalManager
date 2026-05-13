@@ -2,6 +2,10 @@
 
 {% block title %}Register Page{% endblock title %}
 
+{% block page_container_class %}container-fluid px-3 px-md-4{% endblock page_container_class %}
+
+{% block page_col_class %}col-12 col-xxl-10 col-xl-11 col-lg-11 col-md-12{% endblock page_col_class %}
+
 {% block content %}
 <div class="card shadow-lg mx-auto mt-5" style="max-width: 70rem;">
   <div class="card-body p-4">
@@ -61,26 +65,26 @@
         <div class="form-text">Hold Ctrl (or Cmd) to select multiple.</div>
       </div>
 
-      <div class="row">
-        <div class="mb-3 col-6">
+      <div class="row g-3">
+        <div class="mb-0 col-12 col-md-6">
           <label class="mb-2 text-muted" for="id_user">Username</label>
           <input id="id_user" type="text" class="form-control" name="user_id" value="{{ user_id }}" required autofocus />
           <div class="invalid-feedback">username is required</div>
         </div>
 
-        <div class="mb-3 col-6">
+        <div class="mb-0 col-12 col-md-6">
           <label class="mb-2 text-muted" for="first_name">First Name</label>
           <input id="first_name" type="text" class="form-control" name="user_firstname" value="{{ user_firstname }}" required autofocus />
           <div class="invalid-feedback">First Name is required</div>
         </div>
 
-        <div class="mb-3 col-6">
+        <div class="mb-0 col-12 col-md-6">
           <label class="mb-2 text-muted" for="last_name">Last Name</label>
           <input id="last_name" type="text" class="form-control" name="user_lastname" value="{{ user_lastname }}" required autofocus />
           <div class="invalid-feedback">Last Name is required</div>
         </div>
         
-        <div class="mb-3 col-6">
+        <div class="mb-0 col-12 col-md-6">
           <label class="mb-2 text-muted" for="select_gender">Gender</label>
           <select class="form-select" aria-label="Default select example" name="user_gender" id="select_gender">
             <option value="Male" {% if user_gender == 'Male' %}selected{% endif %}>Male</option>
@@ -88,31 +92,31 @@
           </select>
         </div>   
         
-        <div class="mb-3 col-6">
+        <div class="mb-0 col-12 col-md-6">
           <label class="mb-2 text-muted" for="birthday">Birthday</label>
           <input id="birthday" type="date" class="form-control" name="birthday" value="{{ birthday }}" required />
           <div class="invalid-feedback">Birthday is invalid</div>
         </div>
         
-        <div class="mb-3 col-6">
+        <div class="mb-0 col-12 col-md-6">
           <label class="mb-2 text-muted" for="email">E-mail Address</label>
           <input id="email" type="email" class="form-control" name="email" value="{{ email }}" required />
           <div class="invalid-feedback">Email is invalid</div>
         </div>
 
-        <div class="mb-3 col-6">
+        <div class="mb-0 col-12 col-md-6">
           <label class="mb-2 text-muted" for="password">Password</label>
           <input id="password" type="password" class="form-control" name="password" required />
           <div class="invalid-feedback">Password is required</div>
         </div>
 
-        <div class="mb-3 col-6">
+        <div class="mb-0 col-12 col-md-6">
           <label class="mb-2 text-muted" for="conf__password">Confirm Password</label>
           <input id="conf__password" type="password" class="form-control" name="conf_password" required />
           <div class="invalid-feedback">Password is required</div>
         </div>
 
-        <div class="mb-3 col-6">
+        <div class="mb-0 col-12 col-md-6">
           <label class="mb-2 text-muted" for="recovery_question">Special Key Question</label>
           <select class="form-select" name="recovery_question" id="recovery_question" required>
             <option value="">Select a question</option>
@@ -123,23 +127,40 @@
           <div class="invalid-feedback">Security question is required</div>
         </div>
 
-        <div class="mb-3 col-6">
+        <div class="mb-0 col-12 col-md-6">
           <label class="mb-2 text-muted" for="recovery_answer">Special Key Answer</label>
           <input id="recovery_answer" type="text" class="form-control" name="recovery_answer" required />
           <div class="invalid-feedback">Security answer is required</div>
         </div>
       </div>
 
-      <div class="mb-3 col-12">
-        <label class="mb-2 text-muted" for="AddressLine">Address Line</label>
-        <input id="AddressLine" type="text" class="form-control mb-2" name="address_line" value="{{ address_line }}" placeholder="Address Line" required autofocus />
-        <input id="Region" type="text" class="form-control mb-2" name="region" value="{{ region }}" placeholder="Region" required autofocus />
-        <input id="City" type="text" class="form-control mb-2" name="city" value="{{ city }}" placeholder="City" required autofocus />
-        <input id="Pincode" type="text" class="form-control" name="pincode" value="{{ pincode }}" placeholder="Code Postal" required autofocus />
-        <div class="invalid-feedback">Address is required</div>
+      <div class="row g-3 mt-1">
+        <div class="col-12 col-md-6">
+          <label class="mb-2 text-muted" for="AddressLine">Address Line</label>
+          <input id="AddressLine" type="text" class="form-control" name="address_line" value="{{ address_line }}" placeholder="Address Line" required autofocus />
+          <div class="invalid-feedback">Address line is required</div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="mb-2 text-muted" for="Region">Region</label>
+          <input id="Region" type="text" class="form-control" name="region" value="{{ region }}" placeholder="Region" required autofocus />
+          <div class="invalid-feedback">Region is required</div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="mb-2 text-muted" for="City">City</label>
+          <input id="City" type="text" class="form-control" name="city" value="{{ city }}" placeholder="City" required autofocus />
+          <div class="invalid-feedback">City is required</div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="mb-2 text-muted" for="Pincode">Code Postal</label>
+          <input id="Pincode" type="text" class="form-control" name="pincode" value="{{ pincode }}" placeholder="Code Postal" required autofocus />
+          <div class="invalid-feedback">Postal code is required</div>
+        </div>
       </div>
-      
-      <div class="mb-3 col-12">
+
+      <div class="mb-3 col-12 mt-3">
         <label for="pic" class="form-label text-muted">Profile Avatar</label>
         <input type="file" class="form-control p-3"  name="profile_pic" id="pic"  required>
       </div>
