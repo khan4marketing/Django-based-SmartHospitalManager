@@ -71,6 +71,14 @@
                 <a href="#" class="btn btn-sm bg-info-light" data-bs-toggle="modal" data-bs-target="#viewModal{{ appointment.id }}">
                   <i class="bi bi-eye-fill"></i> View
                 </a>
+                <form method="post" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" value='{{ appointment.id }}' name="app">
+                  <input type="hidden" value="Accepted" name="status">
+                  <button type="submit" class="btn btn-sm bg-success-light" title="Approve Appointment">
+                    <i class="bi bi-check-circle-fill"></i> Approve
+                  </button>
+                </form>
               </div>
               <!-- Appointment Details Modal -->
               <div class="modal fade custom-modal" id="viewModal{{ appointment.id }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">

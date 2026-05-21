@@ -1,13 +1,47 @@
 {% extends 'users/base.html' %}
+{% load static %}
 
 {% block title %}Register Page{% endblock title %}
 
-{% block content %}
-<div class="card shadow-lg mx-auto mt-5" style="max-width: 70rem;">
-  <div class="card-body p-4">
-    <h1 class="fs-4 card-title fw-bold mb-3 text-center">Register</h1>
+{% block page_container_class %}container-fluid h-100 p-0{% endblock page_container_class %}
+{% block page_row_class %}row h-100 m-0{% endblock page_row_class %}
+{% block page_col_class %}col-12 d-flex align-items-center justify-content-center p-0{% endblock page_col_class %}
 
-    <form method="POST" class="needs-validation" novalidate="" autocomplete="off" enctype="multipart/form-data">
+{% block content %}
+<style>
+  /* Compact, full-viewport centered card */
+  .register-card { max-width: 900px; height: calc(100vh - 140px); margin: 0 auto; display:flex; flex-direction:column; }
+  .register-card .card-body { overflow: auto; padding: 1rem; }
+  .register-steps .step { display: none; }
+  .register-steps .step.active { display: block; }
+  .form-row .mb-3 { margin-bottom: .5rem; }
+  .small-note { font-size: .85rem; color: #6c757d; }
+  .progress { height: 6px; background: #e9ecef; border-radius: 4px; overflow: hidden; }
+  .progress-bar { background: #0d6efd; width: 0%; height:100%; transition: width .25s ease; }
+  @media (max-width: 576px) {
+    .register-card { height: auto; margin-top: 1rem; }
+    .register-card .card-body { overflow: visible; }
+  }
+
+  /* Hide base layout logo / copyright on this page (we render them inside the card) */
+  .text-center.my-5 > img { display: none !important; }
+  .text-center.my-5.text-muted { display: none !important; }
+  .register-header { position: sticky; top: 0; background: #fff; z-index: 20; padding: .5rem 0; border-bottom: 1px solid #e9ecef; }
+  .register-header img { max-height:48px; }
+</style>
+
+<div class="card shadow register-card">
+  <div class="card-body">
+    <div class="register-header d-flex align-items-center justify-content-center mb-2">
+      <img src="{% static 'img/logo.png' %}" alt="Hospital Management logo"/>
+      <div class="ms-2 d-none d-sm-block">
+        <div class="h6 mb-0 fw-bold">Hospital Management</div>
+      </div>
+    </div>
+    <h1 class="fs-5 card-title fw-bold mb-2 text-center">Register</h1>
+    <div class="progress mb-3" aria-hidden="true"><div class="progress-bar" role="progressbar"></div></div>
+
+    <form method="POST" class="needs-validation" novalidate autocomplete="off" enctype="multipart/form-data" id="registerForm">
       {% csrf_token %}
 
       {% if messages %}
@@ -53,124 +87,167 @@
       
       <div id="diseases_block" class="mb-3 col-12" style="display: none;">
         <label class="mb-2 text-muted">Previous Diseases</label>
-        <select name="diseases" id="diseases" class="form-select" multiple>
+        <div class="diseases-list">
           {% for d in diseases %}
-            <option value="{{ d.name }}">{{ d.name }}</option>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" name="diseases" id="disease_{{ forloop.counter }}" value="{{ d.name }}">
+              <label class="form-check-label" for="disease_{{ forloop.counter }}">{{ d.name }}</label>
+            </div>
           {% endfor %}
-        </select>
-        <div class="form-text">Hold Ctrl (or Cmd) to select multiple.</div>
+        </div>
+        <div class="form-text">Tap options to select multiple.</div>
       </div>
 
-      <div class="row">
-        <div class="mb-3 col-6">
-          <label class="mb-2 text-muted" for="id_user">Username</label>
-          <input id="id_user" type="text" class="form-control" name="user_id" value="{{ user_id }}" required autofocus />
-          <div class="invalid-feedback">username is required</div>
+      <div class="register-steps">
+        <div class="step active" data-step="1">
+          <div class="row form-row">
+            <div class="mb-3 col-6">
+              <label class="mb-2 text-muted" for="id_user">Username</label>
+              <input id="id_user" type="text" class="form-control" name="user_id" value="{{ user_id }}" required autofocus />
+              <div class="invalid-feedback">username is required</div>
+            </div>
+            <div class="mb-3 col-6">
+              <label class="mb-2 text-muted" for="first_name">First Name</label>
+              <input id="first_name" type="text" class="form-control" name="user_firstname" value="{{ user_firstname }}" required autofocus />
+              <div class="invalid-feedback">First Name is required</div>
+            </div>
+
+            <div class="mb-3 col-6">
+              <label class="mb-2 text-muted" for="last_name">Last Name</label>
+              <input id="last_name" type="text" class="form-control" name="user_lastname" value="{{ user_lastname }}" required autofocus />
+              <div class="invalid-feedback">Last Name is required</div>
+            </div>
+            
+            <div class="mb-3 col-6">
+              <label class="mb-2 text-muted" for="select_gender">Gender</label>
+              <select class="form-select" aria-label="Default select example" name="user_gender" id="select_gender">
+                <option value="Male" {% if user_gender == 'Male' %}selected{% endif %}>Male</option>
+                <option value="Female" {% if user_gender == 'Female' %}selected{% endif %}>Female</option>
+              </select>
+            </div>   
+            
+            <div class="mb-3 col-6">
+              <label class="mb-2 text-muted" for="birthday">Birthday</label>
+              <input id="birthday" type="date" class="form-control" name="birthday" value="{{ birthday }}" required />
+              <div class="invalid-feedback">Birthday is invalid</div>
+            </div>
+            
+            <div class="mb-3 col-6">
+              <label class="mb-2 text-muted" for="email">E-mail Address</label>
+              <input id="email" type="email" class="form-control" name="email" value="{{ email }}" required />
+              <div class="invalid-feedback">Email is invalid</div>
+            </div>
+
+            <div class="mb-3 col-6">
+              <label class="mb-2 text-muted" for="password">Password</label>
+              <input id="password" type="password" class="form-control" name="password" required />
+              <div class="invalid-feedback">Password is required</div>
+            </div>
+
+            <div class="mb-3 col-6">
+              <label class="mb-2 text-muted" for="conf__password">Confirm Password</label>
+              <input id="conf__password" type="password" class="form-control" name="conf_password" required />
+              <div class="invalid-feedback">Password is required</div>
+            </div>
+
+            <div class="mb-3 col-6">
+              <label class="mb-2 text-muted" for="recovery_question">Special Key Question</label>
+              <select class="form-select" name="recovery_question" id="recovery_question" required>
+                <option value="">Select a question</option>
+                <option value="pet_name">What is your pet name?</option>
+                <option value="first_school">What is your first school name?</option>
+                <option value="hobby">What is your favorite hobby?</option>
+              </select>
+              <div class="invalid-feedback">Security question is required</div>
+            </div>
+
+            <div class="mb-3 col-6">
+              <label class="mb-2 text-muted" for="recovery_answer">Special Key Answer</label>
+              <input id="recovery_answer" type="text" class="form-control" name="recovery_answer" required />
+              <div class="invalid-feedback">Security answer is required</div>
+            </div>
+          </div>
+          <div class="d-flex mt-3">
+            <button type="button" class="btn btn-outline-secondary me-auto" id="cancelBtn">Cancel</button>
+            <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
+          </div>
         </div>
 
-        <div class="mb-3 col-6">
-          <label class="mb-2 text-muted" for="first_name">First Name</label>
-          <input id="first_name" type="text" class="form-control" name="user_firstname" value="{{ user_firstname }}" required autofocus />
-          <div class="invalid-feedback">First Name is required</div>
-        </div>
+        <div class="step" data-step="2">
+          <div class="row form-row">
+            <div class="mb-3 col-12">
+              <label class="mb-2 text-muted" for="AddressLine">Address Line</label>
+              <input id="AddressLine" type="text" class="form-control mb-2" name="address_line" value="{{ address_line }}" placeholder="Address Line" required autofocus />
+              <div class="row">
+                <div class="col-6 pe-1"><input id="Region" type="text" class="form-control mb-2" name="region" value="{{ region }}" placeholder="Region" required autofocus /></div>
+                <div class="col-6 ps-1"><input id="City" type="text" class="form-control mb-2" name="city" value="{{ city }}" placeholder="City" required autofocus /></div>
+              </div>
+              <div class="row">
+                <div class="col-6 pe-1"><input id="Pincode" type="text" class="form-control" name="pincode" value="{{ pincode }}" placeholder="Postal Code" required autofocus /></div>
+                <div class="col-6 ps-1">
+                  <label for="pic" class="form-label small-note">Profile Avatar</label>
+                  <input type="file" class="form-control" name="profile_pic" id="pic">
+                </div>
+              </div>
+            </div>
 
-        <div class="mb-3 col-6">
-          <label class="mb-2 text-muted" for="last_name">Last Name</label>
-          <input id="last_name" type="text" class="form-control" name="user_lastname" value="{{ user_lastname }}" required autofocus />
-          <div class="invalid-feedback">Last Name is required</div>
-        </div>
-        
-        <div class="mb-3 col-6">
-          <label class="mb-2 text-muted" for="select_gender">Gender</label>
-          <select class="form-select" aria-label="Default select example" name="user_gender" id="select_gender">
-            <option value="Male" {% if user_gender == 'Male' %}selected{% endif %}>Male</option>
-            <option value="Female" {% if user_gender == 'Female' %}selected{% endif %}>Female</option>
-          </select>
-        </div>   
-        
-        <div class="mb-3 col-6">
-          <label class="mb-2 text-muted" for="birthday">Birthday</label>
-          <input id="birthday" type="date" class="form-control" name="birthday" value="{{ birthday }}" required />
-          <div class="invalid-feedback">Birthday is invalid</div>
-        </div>
-        
-        <div class="mb-3 col-6">
-          <label class="mb-2 text-muted" for="email">E-mail Address</label>
-          <input id="email" type="email" class="form-control" name="email" value="{{ email }}" required />
-          <div class="invalid-feedback">Email is invalid</div>
-        </div>
+            <p class="form-text text-muted mb-3 mt-2">By registering you agree with our terms and condition.</p>
 
-        <div class="mb-3 col-6">
-          <label class="mb-2 text-muted" for="password">Password</label>
-          <input id="password" type="password" class="form-control" name="password" required />
-          <div class="invalid-feedback">Password is required</div>
+            <div class="d-flex mt-2 w-100">
+              <button type="button" class="btn btn-outline-secondary" id="prevBtn">Back</button>
+              <button type="submit" class="btn btn-primary ms-auto" id="submitBtn">Register</button>
+            </div>
+          </div>
         </div>
-
-        <div class="mb-3 col-6">
-          <label class="mb-2 text-muted" for="conf__password">Confirm Password</label>
-          <input id="conf__password" type="password" class="form-control" name="conf_password" required />
-          <div class="invalid-feedback">Password is required</div>
-        </div>
-
-        <div class="mb-3 col-6">
-          <label class="mb-2 text-muted" for="recovery_question">Special Key Question</label>
-          <select class="form-select" name="recovery_question" id="recovery_question" required>
-            <option value="">Select a question</option>
-            <option value="pet_name">What is your pet name?</option>
-            <option value="first_school">What is your first school name?</option>
-            <option value="hobby">What is your favorite hobby?</option>
-          </select>
-          <div class="invalid-feedback">Security question is required</div>
-        </div>
-
-        <div class="mb-3 col-6">
-          <label class="mb-2 text-muted" for="recovery_answer">Special Key Answer</label>
-          <input id="recovery_answer" type="text" class="form-control" name="recovery_answer" required />
-          <div class="invalid-feedback">Security answer is required</div>
-        </div>
-      </div>
-
-      <div class="mb-3 col-12">
-        <label class="mb-2 text-muted" for="AddressLine">Address Line</label>
-        <input id="AddressLine" type="text" class="form-control mb-2" name="address_line" value="{{ address_line }}" placeholder="Address Line" required autofocus />
-        <input id="Region" type="text" class="form-control mb-2" name="region" value="{{ region }}" placeholder="Region" required autofocus />
-        <input id="City" type="text" class="form-control mb-2" name="city" value="{{ city }}" placeholder="City" required autofocus />
-        <input id="Pincode" type="text" class="form-control" name="pincode" value="{{ pincode }}" placeholder="Code Postal" required autofocus />
-        <div class="invalid-feedback">Address is required</div>
-      </div>
-      
-      <div class="mb-3 col-12">
-        <label for="pic" class="form-label text-muted">Profile Avatar</label>
-        <input type="file" class="form-control p-3"  name="profile_pic" id="pic"  required>
-      </div>
-
-      <p class="form-text text-muted mb-3">
-        By registering you agree with our terms and condition.
-      </p>
-
-      <div class="align-items-center d-flex">
-        <button type="submit" class="btn btn-primary ms-auto primary-color-background">
-          Register
-        </button>
       </div>
     </form>
   </div>
-  <div class="card-footer py-3 border-0">
-    <div class="text-center">
-      Already have an account?
-      <a href="{% url 'login' %}" class="text-dark secondary-color">Login</a>
-    </div>
+  <div class="card-footer py-2 border-0 text-center small-note">
+    <div>Already have an account? <a href="{% url 'login' %}" class="text-dark">Login</a></div>
+    <div class="mt-2 text-muted">Copyright &copy; 2024 &mdash; Hospital Management</div>
   </div>
 </div>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-    toggleFields();
+document.addEventListener('DOMContentLoaded', function() {
+    const steps = Array.from(document.querySelectorAll('.register-steps .step'));
+    let current = 0;
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const progressBar = document.querySelector('.progress-bar');
 
-    document.getElementById('user_status').addEventListener('change', function() {
-      toggleFields();
-    });
+    function showStep(i){
+      steps.forEach((s,idx)=> s.classList.toggle('active', idx===i));
+      prevBtn && (prevBtn.style.display = i===0 ? 'none' : 'inline-block');
+      nextBtn && (nextBtn.style.display = i===steps.length-1 ? 'none' : 'inline-block');
+      document.getElementById('submitBtn').style.display = i===steps.length-1 ? 'inline-block' : 'none';
+      progressBar.style.width = Math.round((i/(steps.length-1))*100) + '%';
+      window.scrollTo(0,0);
+    }
 
+    function validateStep(i){
+      const step = steps[i];
+      const inputs = step.querySelectorAll('input[required], select[required], textarea[required]');
+      for(const input of inputs){
+        if((input.type === 'file' && input.required && input.files.length === 0) || (!input.value && input.type !== 'file')){
+          input.classList.add('is-invalid');
+          input.focus();
+          return false;
+        } else {
+          input.classList.remove('is-invalid');
+        }
+      }
+      return true;
+    }
+
+    showStep(current);
+
+    nextBtn && nextBtn.addEventListener('click', function(){ if(validateStep(current)){ current++; showStep(current); } });
+    prevBtn && prevBtn.addEventListener('click', function(){ current = Math.max(0, current-1); showStep(current); });
+    cancelBtn && cancelBtn.addEventListener('click', function(){ window.location = '/'; });
+
+    // Existing toggleFields logic adapted
     function toggleFields() {
       var userConfig = document.getElementById('user_status').value;
       var specialtyBlock = document.getElementById('specialty_block');
@@ -179,23 +256,23 @@
       var bioField = document.getElementById('bio');
 
       if (userConfig === 'Doctor') {
-        specialtyBlock.style.display = 'block';
-        bioBlock.style.display = 'block';
-
-        specialtyField.setAttribute('required', 'required');
-        bioField.setAttribute('required', 'required');
-        document.getElementById('diseases_block').style.display = 'none';
+        specialtyBlock && (specialtyBlock.style.display = 'block');
+        bioBlock && (bioBlock.style.display = 'block');
+        specialtyField && specialtyField.setAttribute('required', 'required');
+        bioField && bioField.setAttribute('required', 'required');
+        var diseases = document.getElementById('diseases_block'); if(diseases) diseases.style.display = 'none';
       } else if (userConfig === 'Patient') {
-        specialtyBlock.style.display = 'none';
-        bioBlock.style.display = 'none';
-
-        specialtyField.removeAttribute('required');
-        bioField.removeAttribute('required');
-        document.getElementById('diseases_block').style.display = 'block';
+        if (specialtyBlock) specialtyBlock.style.display = 'none';
+        if (bioBlock) bioBlock.style.display = 'none';
+        if (specialtyField) specialtyField.removeAttribute('required');
+        if (bioField) bioField.removeAttribute('required');
+        var diseases = document.getElementById('diseases_block'); if(diseases) diseases.style.display = 'block';
       }
     }
-  });
-</script>
 
+    document.getElementById('user_status').addEventListener('change', toggleFields);
+    toggleFields();
+});
+</script>
 
 {% endblock content %}
