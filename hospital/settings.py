@@ -27,7 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users',
+    'users.apps.UsersConfig',
     'doctors',
     'patients'
 ]
@@ -38,6 +38,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'users.middleware.LoginRequiredPathMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -132,3 +133,4 @@ EMAIL_HOST_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'your email'
 EMAIL_HOST_PASSWORD = 'your email host password'
+AUTO_SEED_DEMO_DATA = True

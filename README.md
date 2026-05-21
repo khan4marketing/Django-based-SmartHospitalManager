@@ -127,6 +127,8 @@ Custom counts:
 python manage.py seed_users --doctors 10 --patients 10 --password Pass@123
 ```
 
+On a fresh database, the project also seeds 20 demo doctors and 20 demo patients automatically after migrations when `AUTO_SEED_DEMO_DATA` is enabled in `hospital/settings.py`.
+
 ## Migration Guide
 
 - Use `python manage.py makemigrations` only when model files change.

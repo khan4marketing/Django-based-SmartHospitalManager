@@ -35,4 +35,9 @@ class LoginRequiredPathMiddleware:
             if path.startswith(self.patient_only_prefixes) and request.user.is_doctor:
                 return redirect('doctor_dashboard')
 
-        return self.get_response(request)
+        response = self.get_response(request)
+
+        if response.status_code == 404 and not request.user.is_authenticated:
+            return redirect('login')
+
+        return response

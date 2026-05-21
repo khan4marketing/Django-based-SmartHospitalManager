@@ -8,7 +8,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from .models import Doctors, Patients, Address , Reste_token , Specialty, Disease
+from .reference_data import ensure_disease_specialty_reference_data
 from .helpers import send_email
 import uuid
 
@@ -17,39 +19,12 @@ Users = get_user_model()
 
 
 def ensure_registration_reference_data():
-  disease_specialty_map = {
-    'Heart Disease': ['Cardiology', 'General Health'],
-    'Skin Disease': ['Dermatology', 'General Health'],
-    'Bone and Joint Problems': ['Orthopedics', 'Rheumatology'],
-    'Digestive Disease': ['Gastroenterology', 'General Health'],
-    'Brain and Nerve Disease': ['Neurology', 'Psychiatry'],
-    'Eye Disease': ['Ophthalmology', 'General Health'],
-    'Child Health Issues': ['Pediatrics', 'General Health'],
-    'Mental Health Disorder': ['Psychiatry', 'General Health']
-  }
-
-  all_specialties = set()
-  for related_specialties in disease_specialty_map.values():
-    all_specialties.update(related_specialties)
-
-  for specialty_name in all_specialties:
-    Specialty.objects.get_or_create(
-      name=specialty_name,
-      defaults={'description': f'{specialty_name} specialist care.'}
-    )
-
-  for disease_name, related_specialties in disease_specialty_map.items():
-    disease, _ = Disease.objects.get_or_create(
-      name=disease_name,
-      defaults={'description': f'History of {disease_name.lower()}.'}
-    )
-    specialties = Specialty.objects.filter(name__in=related_specialties)
-    disease.specialties.set(specialties)
+  return ensure_disease_specialty_reference_data(Specialty, Disease)
 
 def register(request):
   ensure_registration_reference_data()
   specialities = Specialty.objects.all().order_by('name')
-  diseases = Disease.objects.all().order_by('name')
+  diseases = ensure_registration_reference_data()
 
   def registration_context(extra=None):
     ctx = {
@@ -91,6 +66,10 @@ def register(request):
       messages.error(request, 'Username already exists. Try again with a different username.')
       return render(request, 'users/register.html', context=registration_context({'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode}))
 
+    if Users.objects.filter(email__iexact=email).exists():
+      messages.error(request, 'Email already exists. Try again with a different email address.')
+      return render(request, 'users/register.html', context=registration_context({'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode}))
+
     specialty_name = None
     if user_status == 'Doctor':
       specialty = request.POST.get('Speciality')
@@ -113,18 +92,23 @@ def register(request):
 
     address = Address.objects.create(address_line=address_line, region=region,city=city, code_postal=pincode)
 
-    user = Users.objects.create_user(
-      first_name=first_name,
-      last_name=last_name,
-      profile_avatar=profile_pic,
-      username=username,
-      email=email,
-      gender=gender,
-      birthday=birthday,
-      password=password,
-      id_address=address,
-      is_doctor=(user_status == 'Doctor')
-    )
+    try:
+      user = Users.objects.create_user(
+        first_name=first_name,
+        last_name=last_name,
+        profile_avatar=profile_pic,
+        username=username,
+        email=email,
+        gender=gender,
+        birthday=birthday,
+        password=password,
+        id_address=address,
+        is_doctor=(user_status == 'Doctor')
+      )
+    except IntegrityError:
+      address.delete()
+      messages.error(request, 'Username or email already exists. Please use different credentials.')
+      return render(request, 'users/register.html', context=registration_context({'user_config': user_status, 'user_firstname': first_name, 'user_lastname': last_name, 'user_id': username, 'email': email, 'user_gender': gender, 'address_line': address_line, 'region': region, 'city': city, 'pincode': pincode}))
       
     user.save()
 

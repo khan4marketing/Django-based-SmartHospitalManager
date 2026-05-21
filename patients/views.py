@@ -4,10 +4,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import CharField, Q, Value
+from django.db.models.functions import Concat
 from datetime import datetime
 from django.urls import reverse
-from users.models import Doctors , Specialty , Patients
+from users.models import Doctors, Specialty, Patients
+from users.reference_data import ensure_disease_specialty_reference_data
 from users.decorators import patient_required
 from patients.models import Appointment , Time , Status, Reminder
 from django.contrib import messages
@@ -32,6 +34,8 @@ User = get_user_model()
 
 @patient_required
 def patient_dashboard(request):
+  ensure_disease_specialty_reference_data(Specialty, Patients._meta.get_field('diseases').remote_field.model)
+
   if request.method == 'POST' and request.POST.get('add_reminder'):
     title = request.POST.get('title')
     reminder_date = request.POST.get('date') or None
@@ -60,83 +64,21 @@ def patient_dashboard(request):
   if patient_profile:
     previous_diseases = list(patient_profile.diseases.values_list('name', flat=True))
 
-  # Recommendation logic
   recommended_doctors = []
   recommended_departments = []
 
   if patient_profile:
-    # derive specialties from known diseases
-    disease_specialties = set()
-    disease_departments = set()
-    for d in patient_profile.diseases.all():
-      for s in d.specialties.all():
-        disease_specialties.add(s.name)
-        if s.department:
-          disease_departments.add(s.department)
-      if d.suggested_department:
-        disease_departments.add(d.suggested_department)
+    recommended_departments = list(
+      {
+        dept
+        for disease in patient_profile.diseases.all()
+        for dept in [disease.suggested_department, *[specialty.department for specialty in disease.specialties.all()]]
+        if dept
+      }
+    )
 
-    # simple symptom-to-specialty mapping
-    symptoms_text = (patient_profile.current_symptoms or '').lower()
-    symptom_map = {
-      'chest': 'Cardiologist',
-      'pain': 'Cardiologist',
-      'fever': 'Physician',
-      'cough': 'Physician',
-      'skin': 'Dermatologist',
-      'rash': 'Dermatologist',
-      'eye': 'Ophthalmologist',
-      'vision': 'Ophthalmologist',
-      'depress': 'Psychiatrist',
-      'anxiet': 'Psychiatrist',
-      'diabet': 'Endocrinologist',
-      'kidney': 'Nephrologist'
-    }
-
-    for k, spec in symptom_map.items():
-      if k in symptoms_text:
-        disease_specialties.add(spec)
-
-    # Age based suggestions (example thresholds)
-    if patient_profile.age:
-      age = patient_profile.age
-      if age >= 60:
-        disease_specialties.add('Geriatrician')
-      if age <= 12:
-        disease_specialties.add('Pediatrician')
-
-    # collect specialty objects
-    preferred_specialties = Specialty.objects.filter(name__in=list(disease_specialties))
-
-    # departments from specialties
-    for s in preferred_specialties:
-      if s.department:
-        disease_departments.add(s.department)
-
-    recommended_departments = list(disease_departments)
-
-    # find matching doctors, prioritize available and highly rated
-    doctors_qs = Doctors.objects.none()
-    if preferred_specialties.exists():
-      doctors_qs = Doctors.objects.filter(specialty__in=preferred_specialties).order_by('-online_status','-rating','-years_of_experience')
-    else:
-      # fallback to general physicians
-      doctors_qs = Doctors.objects.filter(specialty__name__in=['Physician','General Medicine']).order_by('-online_status','-rating','-years_of_experience')
-
-    # build a lightweight structure for template
-    for doc in doctors_qs[:8]:
-      times = [t.time for t in doc.available_times.all()]
-      recommended_doctors.append({
-        'username': doc.user.username,
-        'name': doc.user.get_full_name() or doc.user.username,
-        'profile_image': doc.user.profile_avatar.url if doc.user.profile_avatar else '',
-        'specialty': doc.specialty.name,
-        'experience': doc.years_of_experience,
-        'rating': float(doc.rating or 0),
-        'times': times,
-        'room': doc.room_number,
-        'online': doc.online_status,
-      })
+    recommendation_pool = _build_doctor_recommendations(patient_profile)
+    recommended_doctors = recommendation_pool[:8]
   reminder_queryset = Reminder.objects.filter(user=request.user).order_by('-created_at')
   reminders = []
   seen_reminders = set()
@@ -161,6 +103,54 @@ def patient_dashboard(request):
     'recommended_doctors': recommended_doctors,
     'recommended_departments': recommended_departments,
   })
+
+
+def _build_doctor_recommendations(patient_profile):
+  disease_specialties = set()
+
+  for disease in patient_profile.diseases.all():
+    for specialty in disease.specialties.all():
+      disease_specialties.add(specialty.name)
+
+  specialty_lookup = {specialty.name: specialty for specialty in Specialty.objects.filter(name__in=disease_specialties)}
+  matching_specialty_ids = {specialty.id for specialty in specialty_lookup.values()}
+
+  doctor_rows = []
+  all_doctors = Doctors.objects.select_related('user', 'specialty', 'department').prefetch_related('available_times')
+
+  for doctor in all_doctors:
+    score = 0
+    reasons = []
+
+    if doctor.specialty_id in matching_specialty_ids:
+      score += 5
+      reasons.append(f"Matches {doctor.specialty.name}")
+
+    if doctor.online_status:
+      score += 1
+      reasons.append('Online now')
+
+    score += min(int(doctor.years_of_experience / 5), 3)
+    score += min(int(float(doctor.rating or 0)), 5)
+
+    if score > 0:
+      doctor_rows.append({
+        'username': doctor.user.username,
+        'name': doctor.user.get_full_name() or doctor.user.username,
+        'profile_image': doctor.user.profile_avatar.url if doctor.user.profile_avatar else '',
+        'specialty': doctor.specialty.name,
+        'experience': doctor.years_of_experience,
+        'rating': float(doctor.rating or 0),
+        'times': [time_slot.time for time_slot in doctor.available_times.all()],
+        'room': doctor.room_number,
+        'online': doctor.online_status,
+        'score': score,
+        'match_reasons': reasons,
+      })
+
+  doctor_rows.sort(key=lambda item: (item['score'], item['online'], item['rating'], item['experience']), reverse=True)
+
+  return doctor_rows
 
 
 @login_required(login_url='/login')
@@ -243,7 +233,18 @@ def my_appointments(request):
     app = app.filter(start_date=filter_date)
 
   if filter_doctor_name:
-    app = app.filter(doctor__user__first_name__icontains=filter_doctor_name)
+    app = app.annotate(
+      doctor_full_name=Concat(
+        'doctor__user__first_name',
+        Value(' '),
+        'doctor__user__last_name',
+        output_field=CharField(),
+      )
+    ).filter(
+      Q(doctor_full_name__icontains=filter_doctor_name) |
+      Q(doctor__user__username__icontains=filter_doctor_name) |
+      Q(doctor__user__id_address__city__icontains=filter_doctor_name)
+    )
 
   return render(request, "patients/my_appointments.html", {
     'appointments': app,
@@ -268,23 +269,14 @@ def book_appointment(request):
   doctors = Doctors.objects.all()
   
   filter_speciality = request.GET.get('filter_speciality')
-  filter_doctor_name = request.GET.get('filter_doctor_name')
 
   if filter_speciality and filter_speciality != 'All':
     doctors = doctors.filter(specialty__name=filter_speciality)
-
-  if filter_doctor_name:
-    doctors = doctors.filter(
-      Q(user__first_name__icontains=filter_doctor_name) |
-      Q(user__last_name__icontains=filter_doctor_name) |
-      Q(user__username__icontains=filter_doctor_name)
-    )
 
   return render(request, "patients/book_appointment.html", {
     'doctors': doctors,
     'specialities': specialities,
     'filter_speciality': filter_speciality,
-    'filter_doctor_name': filter_doctor_name,
   })
   
   # return render(request,'patients/book_appointment.html',{"doctors":doctors})
